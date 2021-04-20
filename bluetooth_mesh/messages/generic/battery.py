@@ -27,8 +27,8 @@ from bluetooth_mesh.messages.util import DefaultCountValidator, EnumAdapter, Opc
 
 
 class GenericBatteryOpcode(IntEnum):
-    BATTERY_GET = 0x8223
-    BATTERY_STATUS = 0x8224
+    GENERIC_BATTERY_GET = 0x8223
+    GENERIC_BATTERY_STATUS = 0x8224
 
 
 class GenericBatteryFlagsPresence(IntEnum):
@@ -85,8 +85,8 @@ GenericBatteryMessage = Struct(
     "params" / Switch(
         this.opcode,
         {
-            GenericBatteryOpcode.BATTERY_GET: GenericBatteryGet,
-            GenericBatteryOpcode.BATTERY_STATUS: GenericBatteryStatus,
+            GenericBatteryOpcode.GENERIC_BATTERY_GET: GenericBatteryGet,
+            GenericBatteryOpcode.GENERIC_BATTERY_STATUS: GenericBatteryStatus,
         },
     )
 )

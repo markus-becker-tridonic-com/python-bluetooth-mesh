@@ -22,25 +22,25 @@
 import calendar
 import enum
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from construct import (
-    Int8ul,
-    Struct,
+    Adapter,
     BitsInteger,
-    Padding,
     BytesInteger,
     Construct,
-    stream_read,
     Container,
-    stream_write,
-    Adapter,
-    StopIf,
-    this,
     Flag,
+    Int8ul,
+    Padding,
+    StopIf,
+    Struct,
+    stream_read,
+    stream_write,
+    this,
 )
 
-from .util import EnumAdapter, EmbeddedBitStruct, OpcodeMessage
+from .util import EmbeddedBitStruct, EnumAdapter, OpcodeMessage
 
 MS_IN_UNCERTAINTY_STEP = 10
 UNCERTAINTY_MS = 10
@@ -54,8 +54,6 @@ SECONDS_IN_15_MINUTES = 15 * 60
 
 
 # fmt: off
-
-
 class TimeRole(enum.IntEnum):
     NONE = 0
     TIME_AUTHORITY = 1
@@ -193,7 +191,6 @@ TimeRoleStatus = TimeRoleMsg
 
 
 # fmt: off
-
 class TimeOpcode(enum.IntEnum):
     TIME_GET = 0x8237
     TIME_SET = 0x005C

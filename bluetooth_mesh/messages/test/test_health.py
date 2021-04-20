@@ -189,7 +189,7 @@ def test_build_invalid(message, decoded, exception):
 
 def test_build_health_message():
     data = HealthMessage.build(
-        dict(opcode=HealthOpcode.ATTENTION_SET, params=dict(attention=6))
+        dict(opcode=HealthOpcode.HEALTH_ATTENTION_SET, params=dict(attention=6))
     )
 
     assert data == bytes.fromhex("800506")
@@ -198,7 +198,7 @@ def test_build_health_message():
 def test_parse_health_message():
     msg = HealthMessage.parse(bytes.fromhex("800506"))
 
-    assert msg == dict(opcode=HealthOpcode.ATTENTION_SET, params=dict(attention=6))
+    assert msg == dict(opcode=HealthOpcode.HEALTH_ATTENTION_SET, params=dict(attention=6))
 
 
 def test_parse_health_message_bad_opcode():

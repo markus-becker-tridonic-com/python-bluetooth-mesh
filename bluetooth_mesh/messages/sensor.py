@@ -152,6 +152,7 @@ SensorDescriptorStatus = GreedyRange(
     ),
 )
 
+
 class _SensorData(Construct):
     def _parse(self, stream, context, path):
         property_id = stream_read(stream, 2)
@@ -209,6 +210,7 @@ class _SensorData(Construct):
             PropertyDict[sensor_setting_property_id]._build(sensor_setting_raw, stream, context, path)
 
         return obj
+
 
 SensorStatus = GreedyRange(
     _SensorData()

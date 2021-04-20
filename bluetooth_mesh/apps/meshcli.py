@@ -49,7 +49,7 @@ from bluetooth_mesh.messages.config import (
     PublishPeriodStepResolution,
 )
 from bluetooth_mesh.messages.properties import PropertyID
-from bluetooth_mesh.messages.time import TimeRole, UNCERTAINTY_MS, CURRENT_TAI_UTC_DELTA
+from bluetooth_mesh.messages.time import CURRENT_TAI_UTC_DELTA, UNCERTAINTY_MS, TimeRole
 from bluetooth_mesh.models import (
     ConfigClient,
     ConfigServer,

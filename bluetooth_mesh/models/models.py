@@ -24,7 +24,7 @@ This module implements mesh models, both clients and servers.
 """
 import inspect
 import itertools
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Type
 
@@ -47,6 +47,7 @@ from bluetooth_mesh.messages.generic.light.lightness import (
 )
 from bluetooth_mesh.messages.generic.onoff import GenericOnOffOpcode
 from bluetooth_mesh.messages.health import HealthOpcode
+from bluetooth_mesh.messages.properties import PropertyID
 from bluetooth_mesh.messages.scene import SceneOpcode
 from bluetooth_mesh.messages.sensor import SensorOpcode
 from bluetooth_mesh.messages.silvair.debug import DebugOpcode, DebugSubOpcode
@@ -65,7 +66,6 @@ from bluetooth_mesh.messages.silvair.network_diagnostic_server import (
     NetworkDiagnosticServerOpcode,
     NetworkDiagnosticSetupServerOpcode,
 )
-from bluetooth_mesh.messages.properties import PropertyID
 from bluetooth_mesh.messages.time import TimeOpcode, TimeRole
 from bluetooth_mesh.models.base import Model
 from bluetooth_mesh.utils import ModelOperationError, ProgressCallback
@@ -135,30 +135,30 @@ class ConfigServer(Model):
 class ConfigClient(Model):
     MODEL_ID = (None, 0x0001)
     OPCODES = {
-        ConfigOpcode.APPKEY_LIST,
-        ConfigOpcode.APPKEY_STATUS,
-        ConfigOpcode.BEACON_STATUS,
-        ConfigOpcode.COMPOSITION_DATA_STATUS,
-        ConfigOpcode.DEFAULT_TTL_STATUS,
-        ConfigOpcode.FRIEND_STATUS,
-        ConfigOpcode.GATT_PROXY_STATUS,
-        ConfigOpcode.HEARBEAT_PUBLICATION_STATUS,
-        ConfigOpcode.HEARBEAT_SUBSCRIPTION_STATUS,
-        ConfigOpcode.KEY_REFRESH_PHASE_STATUS,
-        ConfigOpcode.LOW_POWER_NODE_POLLTIMEOUT_STATUS,
-        ConfigOpcode.MODEL_APP_STATUS,
-        ConfigOpcode.MODEL_PUBLICATION_STATUS,
-        ConfigOpcode.MODEL_SUBSCRIPTION_STATUS,
-        ConfigOpcode.NETKEY_LIST,
-        ConfigOpcode.NETKEY_STATUS,
-        ConfigOpcode.NETWORK_TRANSMIT_STATUS,
-        ConfigOpcode.NODE_IDENTITY_STATUS,
-        ConfigOpcode.NODE_RESET_STATUS,
-        ConfigOpcode.RELAY_STATUS,
-        ConfigOpcode.SIG_MODEL_APP_LIST,
-        ConfigOpcode.SIG_MODEL_SUBSCRIPTION_LIST,
-        ConfigOpcode.VENDOR_MODEL_APP_LIST,
-        ConfigOpcode.VENDOR_MODEL_SUBSCRIPTION_LIST,
+        ConfigOpcode.CONFIG_APPKEY_LIST,
+        ConfigOpcode.CONFIG_APPKEY_STATUS,
+        ConfigOpcode.CONFIG_BEACON_STATUS,
+        ConfigOpcode.CONFIG_COMPOSITION_DATA_STATUS,
+        ConfigOpcode.CONFIG_DEFAULT_TTL_STATUS,
+        ConfigOpcode.CONFIG_FRIEND_STATUS,
+        ConfigOpcode.CONFIG_GATT_PROXY_STATUS,
+        ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_STATUS,
+        ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_STATUS,
+        ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_STATUS,
+        ConfigOpcode.CONFIG_LOW_POWER_NODE_POLLTIMEOUT_STATUS,
+        ConfigOpcode.CONFIG_MODEL_APP_STATUS,
+        ConfigOpcode.CONFIG_MODEL_PUBLICATION_STATUS,
+        ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_STATUS,
+        ConfigOpcode.CONFIG_NETKEY_LIST,
+        ConfigOpcode.CONFIG_NETKEY_STATUS,
+        ConfigOpcode.CONFIG_NETWORK_TRANSMIT_STATUS,
+        ConfigOpcode.CONFIG_NODE_IDENTITY_STATUS,
+        ConfigOpcode.CONFIG_NODE_RESET_STATUS,
+        ConfigOpcode.CONFIG_RELAY_STATUS,
+        ConfigOpcode.CONFIG_SIG_MODEL_APP_LIST,
+        ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_LIST,
+        ConfigOpcode.CONFIG_VENDOR_MODEL_APP_LIST,
+        ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_LIST,
     }
 
     @staticmethod
@@ -239,10 +239,10 @@ class ConfigClient(Model):
             nodes,
             net_index,
             request=dict(
-                opcode=ConfigOpcode.COMPOSITION_DATA_GET, params=dict(page=0,)
+                opcode=ConfigOpcode.CONFIG_COMPOSITION_DATA_GET, params=dict(page=0,)
             ),
             status=dict(
-                opcode=ConfigOpcode.COMPOSITION_DATA_STATUS, params=dict(page=0,)
+                opcode=ConfigOpcode.CONFIG_COMPOSITION_DATA_STATUS, params=dict(page=0,)
             ),
             send_interval=send_interval,
             progress_callback=progress_callback,
@@ -260,8 +260,8 @@ class ConfigClient(Model):
         return await self.get_param(
             nodes,
             net_index,
-            request=dict(opcode=ConfigOpcode.DEFAULT_TTL_GET, params=dict()),
-            status=dict(opcode=ConfigOpcode.DEFAULT_TTL_STATUS, params=dict()),
+            request=dict(opcode=ConfigOpcode.CONFIG_DEFAULT_TTL_GET, params=dict()),
+            status=dict(opcode=ConfigOpcode.CONFIG_DEFAULT_TTL_STATUS, params=dict()),
             send_interval=send_interval,
             progress_callback=progress_callback,
             timeout=timeout or 2 * send_interval * len(nodes),
@@ -278,8 +278,8 @@ class ConfigClient(Model):
         return await self.get_param(
             nodes,
             net_index,
-            request=dict(opcode=ConfigOpcode.RELAY_GET, params=dict()),
-            status=dict(opcode=ConfigOpcode.RELAY_STATUS, params=dict()),
+            request=dict(opcode=ConfigOpcode.CONFIG_RELAY_GET, params=dict()),
+            status=dict(opcode=ConfigOpcode.CONFIG_RELAY_STATUS, params=dict()),
             send_interval=send_interval,
             progress_callback=progress_callback,
             timeout=timeout or 2 * send_interval * len(nodes),
@@ -298,10 +298,10 @@ class ConfigClient(Model):
             nodes,
             net_index,
             request=dict(
-                opcode=ConfigOpcode.KEY_REFRESH_PHASE_GET, params=dict(net_key_index=0,)
+                opcode=ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_GET, params=dict(net_key_index=0,)
             ),
             status=dict(
-                opcode=ConfigOpcode.KEY_REFRESH_PHASE_STATUS,
+                opcode=ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_STATUS,
                 params=dict(net_key_index=net_key_index,),
             ),
             send_interval=send_interval,
@@ -315,7 +315,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETKEY_STATUS,
+            opcode=ConfigOpcode.CONFIG_NETKEY_STATUS,
             params=dict(net_key_index=net_key_index, status=StatusCode.SUCCESS,),
         )
 
@@ -323,7 +323,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETKEY_ADD,
+            opcode=ConfigOpcode.CONFIG_NETKEY_ADD,
             params=dict(net_key_index=net_key_index, net_key=net_key.bytes,),
         )
 
@@ -340,7 +340,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETKEY_STATUS,
+            opcode=ConfigOpcode.CONFIG_NETKEY_STATUS,
             params=dict(net_key_index=net_key_index, status=StatusCode.SUCCESS,),
         )
 
@@ -348,7 +348,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETKEY_DELETE,
+            opcode=ConfigOpcode.CONFIG_NETKEY_DELETE,
             params=dict(net_key_index=net_key_index,),
         )
 
@@ -370,7 +370,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.APPKEY_STATUS,
+            opcode=ConfigOpcode.CONFIG_APPKEY_STATUS,
             params=dict(net_key_index=net_key_index, app_key_index=app_key_index,),
         )
 
@@ -378,7 +378,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.APPKEY_ADD,
+            opcode=ConfigOpcode.CONFIG_APPKEY_ADD,
             params=dict(
                 net_key_index=net_key_index,
                 app_key_index=app_key_index,
@@ -401,7 +401,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.APPKEY_STATUS,
+            opcode=ConfigOpcode.CONFIG_APPKEY_STATUS,
             params=dict(net_key_index=net_key_index, app_key_index=app_key_index,),
         )
 
@@ -409,7 +409,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.APPKEY_DELETE,
+            opcode=ConfigOpcode.CONFIG_APPKEY_DELETE,
             params=dict(net_key_index=net_key_index, app_key_index=app_key_index,),
         )
 
@@ -433,7 +433,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.APPKEY_STATUS,
+            opcode=ConfigOpcode.CONFIG_APPKEY_STATUS,
             params=dict(net_key_index=net_key_index, app_key_index=app_key_index,),
         )
 
@@ -441,7 +441,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.APPKEY_UPDATE,
+            opcode=ConfigOpcode.CONFIG_APPKEY_UPDATE,
             params=dict(app_key_index=0, net_key_index=0, app_key=app_key.bytes,),
         )
 
@@ -465,7 +465,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_APP_STATUS,
+            opcode=ConfigOpcode.CONFIG_MODEL_APP_STATUS,
             params=dict(
                 element_address=element_address,
                 app_key_index=app_key_index,
@@ -477,7 +477,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_APP_BIND,
+            opcode=ConfigOpcode.CONFIG_MODEL_APP_BIND,
             params=dict(
                 element_address=element_address,
                 app_key_index=app_key_index,
@@ -502,7 +502,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETWORK_TRANSMIT_STATUS,
+            opcode=ConfigOpcode.CONFIG_NETWORK_TRANSMIT_STATUS,
             params=dict(),
         )
 
@@ -510,7 +510,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETWORK_TRANSMIT_GET,
+            opcode=ConfigOpcode.CONFIG_NETWORK_TRANSMIT_GET,
             params=dict(),
         )
 
@@ -523,7 +523,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETWORK_TRANSMIT_STATUS,
+            opcode=ConfigOpcode.CONFIG_NETWORK_TRANSMIT_STATUS,
             params=dict(interval=interval, count=count),
         )
 
@@ -531,7 +531,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETWORK_TRANSMIT_SET,
+            opcode=ConfigOpcode.CONFIG_NETWORK_TRANSMIT_SET,
             params=dict(interval=interval, count=count),
         )
 
@@ -544,7 +544,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETKEY_STATUS,
+            opcode=ConfigOpcode.CONFIG_NETKEY_STATUS,
             params=dict(net_key_index=net_key_index,),
         )
 
@@ -552,7 +552,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.NETKEY_UPDATE,
+            opcode=ConfigOpcode.CONFIG_NETKEY_UPDATE,
             params=dict(net_key_index=0, net_key=net_key.bytes,),
         )
 
@@ -574,7 +574,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_SUBSCRIPTION_STATUS,
+            opcode=ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_STATUS,
             params=dict(
                 element_address=element_address,
                 address=subscription_address,
@@ -586,7 +586,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_SUBSCRIPTION_ADD,
+            opcode=ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_ADD,
             params=dict(
                 element_address=element_address,
                 address=subscription_address,
@@ -614,7 +614,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_SUBSCRIPTION_STATUS,
+            opcode=ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_STATUS,
             params=dict(
                 element_address=element_address,
                 address=subscription_address,
@@ -626,7 +626,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_SUBSCRIPTION_DELETE,
+            opcode=ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_DELETE,
             params=dict(
                 element_address=element_address,
                 address=subscription_address,
@@ -649,7 +649,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_SUBSCRIPTION_STATUS,
+            opcode=ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_STATUS,
             params=dict(
                 element_address=element_address,
                 address=0,
@@ -661,7 +661,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_SUBSCRIPTION_DELETE_ALL,
+            opcode=ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_DELETE_ALL,
             params=dict(
                 element_address=element_address, model=self._get_model_id(model),
             ),
@@ -680,11 +680,11 @@ class ConfigClient(Model):
         self, destination: int, net_index: int, element_address: int, model: Type[Model]
     ) -> ModelSubscriptionList:
         if model.MODEL_ID[0] is not None:
-            status_opcode = ConfigOpcode.VENDOR_MODEL_SUBSCRIPTION_LIST
-            request_opcode = ConfigOpcode.VENDOR_MODEL_SUBSCRIPTION_GET
+            status_opcode = ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_LIST
+            request_opcode = ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_GET
         else:
-            status_opcode = ConfigOpcode.SIG_MODEL_SUBSCRIPTION_LIST
-            request_opcode = ConfigOpcode.SIG_MODEL_SUBSCRIPTION_GET
+            status_opcode = ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_LIST
+            request_opcode = ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_GET
 
         status = self.expect_dev(
             destination,
@@ -720,7 +720,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_PUBLICATION_STATUS,
+            opcode=ConfigOpcode.CONFIG_MODEL_PUBLICATION_STATUS,
             params=dict(),
         )
 
@@ -728,7 +728,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_PUBLICATION_GET,
+            opcode=ConfigOpcode.CONFIG_MODEL_PUBLICATION_GET,
             params=dict(
                 element_address=element_address, model=self._get_model_id(model)
             ),
@@ -774,7 +774,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_PUBLICATION_STATUS,
+            opcode=ConfigOpcode.CONFIG_MODEL_PUBLICATION_STATUS,
             params=dict(
                 status=StatusCode.SUCCESS,
                 element_address=element_address,
@@ -796,7 +796,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.MODEL_PUBLICATION_SET,
+            opcode=ConfigOpcode.CONFIG_MODEL_PUBLICATION_SET,
             params=dict(
                 element_address=element_address,
                 publish_address=publication_address,
@@ -849,7 +849,7 @@ class ConfigClient(Model):
         status = self.expect_dev(
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.BEACON_STATUS,
+            opcode=ConfigOpcode.CONFIG_BEACON_STATUS,
             params=dict(
                 beacon=SecureNetworkBeacon.ON if enabled else SecureNetworkBeacon.OFF,
             ),
@@ -859,7 +859,7 @@ class ConfigClient(Model):
             self.send_dev,
             destination,
             net_index=net_index,
-            opcode=ConfigOpcode.BEACON_SET,
+            opcode=ConfigOpcode.CONFIG_BEACON_SET,
             params=dict(
                 beacon=SecureNetworkBeacon.ON if enabled else SecureNetworkBeacon.OFF,
             ),
@@ -875,17 +875,17 @@ class ConfigClient(Model):
 class HealthServer(Model):
     MODEL_ID = (None, 0x0002)
     OPCODES = {
-        HealthOpcode.FAULT_GET,
-        HealthOpcode.FAULT_CLEAR,
-        HealthOpcode.FAULT_CLEAR_UNACKNOWLEDGED,
-        HealthOpcode.FAULT_TEST,
-        HealthOpcode.FAULT_TEST_UNACKNOWLEDGED,
-        HealthOpcode.PERIOD_GET,
-        HealthOpcode.PERIOD_SET,
-        HealthOpcode.PERIOD_SET_UNACKNOWLEDGED,
-        HealthOpcode.ATTENTION_GET,
-        HealthOpcode.ATTENTION_SET,
-        HealthOpcode.ATTENTION_SET_UNACKNOWLEDGED,
+        HealthOpcode.HEALTH_FAULT_GET,
+        HealthOpcode.HEALTH_FAULT_CLEAR,
+        HealthOpcode.HEALTH_FAULT_CLEAR_UNACKNOWLEDGED,
+        HealthOpcode.HEALTH_FAULT_TEST,
+        HealthOpcode.HEALTH_FAULT_TEST_UNACKNOWLEDGED,
+        HealthOpcode.HEALTH_PERIOD_GET,
+        HealthOpcode.HEALTH_PERIOD_SET,
+        HealthOpcode.HEALTH_PERIOD_SET_UNACKNOWLEDGED,
+        HealthOpcode.HEALTH_ATTENTION_GET,
+        HealthOpcode.HEALTH_ATTENTION_SET,
+        HealthOpcode.HEALTH_ATTENTION_SET_UNACKNOWLEDGED,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -894,10 +894,10 @@ class HealthServer(Model):
 class HealthClient(Model):
     MODEL_ID = (None, 0x0003)
     OPCODES = {
-        HealthOpcode.CURRENT_STATUS,
-        HealthOpcode.FAULT_STATUS,
-        HealthOpcode.PERIOD_STATUS,
-        HealthOpcode.ATTENTION_STATUS,
+        HealthOpcode.HEALTH_CURRENT_STATUS,
+        HealthOpcode.HEALTH_FAULT_STATUS,
+        HealthOpcode.HEALTH_PERIOD_STATUS,
+        HealthOpcode.HEALTH_ATTENTION_STATUS,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -907,7 +907,7 @@ class HealthClient(Model):
             destination,
             app_index=app_index,
             destination=None,
-            opcode=HealthOpcode.ATTENTION_STATUS,
+            opcode=HealthOpcode.HEALTH_ATTENTION_STATUS,
             params=dict(attention=attention,),
         )
 
@@ -915,7 +915,7 @@ class HealthClient(Model):
             self.send_app,
             destination,
             app_index=app_index,
-            opcode=HealthOpcode.ATTENTION_SET,
+            opcode=HealthOpcode.HEALTH_ATTENTION_SET,
             params=dict(attention=attention,),
         )
 
@@ -927,7 +927,7 @@ class HealthClient(Model):
             self.send_app,
             destination,
             app_index=app_index,
-            opcode=HealthOpcode.ATTENTION_SET_UNACKNOWLEDGED,
+            opcode=HealthOpcode.HEALTH_ATTENTION_SET_UNACKNOWLEDGED,
             params=dict(attention=attention,),
         )
 
@@ -1145,9 +1145,9 @@ class NetworkDiagnosticSetupClient(Model):
 class GenericOnOffServer(Model):
     MODEL_ID = (None, 0x1000)
     OPCODES = {
-        GenericOnOffOpcode.ONOFF_GET,
-        GenericOnOffOpcode.ONOFF_SET,
-        GenericOnOffOpcode.ONOFF_SET_UNACKNOWLEDGED,
+        GenericOnOffOpcode.GENERIC_ONOFF_GET,
+        GenericOnOffOpcode.GENERIC_ONOFF_SET,
+        GenericOnOffOpcode.GENERIC_ONOFF_SET_UNACKNOWLEDGED,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -1156,7 +1156,7 @@ class GenericOnOffServer(Model):
 class GenericOnOffClient(Model):
     MODEL_ID = (None, 0x1001)
     OPCODES = {
-        GenericOnOffOpcode.ONOFF_STATUS,
+        GenericOnOffOpcode.GENERIC_ONOFF_STATUS,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -1176,7 +1176,7 @@ class GenericOnOffClient(Model):
             destination,
             app_index=app_index,
             destination=None,
-            opcode=GenericOnOffOpcode.ONOFF_STATUS,
+            opcode=GenericOnOffOpcode.GENERIC_ONOFF_STATUS,
             params=dict(present_onoff=onoff),
         )
 
@@ -1185,7 +1185,7 @@ class GenericOnOffClient(Model):
             ret = self.send_app(
                 destination,
                 app_index=app_index,
-                opcode=GenericOnOffOpcode.ONOFF_SET,
+                opcode=GenericOnOffOpcode.GENERIC_ONOFF_SET,
                 params=dict(
                     onoff=onoff,
                     tid=tid,
@@ -1221,7 +1221,7 @@ class GenericOnOffClient(Model):
             ret = self.send_app(
                 destination,
                 app_index=app_index,
-                opcode=GenericOnOffOpcode.ONOFF_SET_UNACKNOWLEDGED,
+                opcode=GenericOnOffOpcode.GENERIC_ONOFF_SET_UNACKNOWLEDGED,
                 params=dict(
                     onoff=onoff,
                     tid=tid,
@@ -1252,7 +1252,7 @@ class GenericOnOffClient(Model):
                 self.send_app,
                 node,
                 app_index=app_index,
-                opcode=GenericOnOffOpcode.ONOFF_GET,
+                opcode=GenericOnOffOpcode.GENERIC_ONOFF_GET,
                 params=dict(),
             )
             for node in nodes
@@ -1263,7 +1263,7 @@ class GenericOnOffClient(Model):
                 node,
                 app_index=0,
                 destination=None,
-                opcode=GenericOnOffOpcode.ONOFF_STATUS,
+                opcode=GenericOnOffOpcode.GENERIC_ONOFF_STATUS,
                 params=dict(),
             )
             for node in nodes
@@ -1377,13 +1377,13 @@ class SceneClient(Model):
 class GenericLevelClient(Model):
     MODEL_ID = (None, 0x1003)
     OPCODES = {
-        GenericLevelOpcode.LEVEL_GET,
-        GenericLevelOpcode.LEVEL_SET,
-        GenericLevelOpcode.LEVEL_SET_UNACKNOWLEDGED,
-        GenericLevelOpcode.DELTA_SET,
-        GenericLevelOpcode.DELTA_SET_UNACKNOWLEDGED,
-        GenericLevelOpcode.MOVE_SET,
-        GenericLevelOpcode.MOVE_SET_UNACKNOWLEDGED,
+        GenericLevelOpcode.GENERIC_LEVEL_GET,
+        GenericLevelOpcode.GENERIC_LEVEL_SET,
+        GenericLevelOpcode.GENERIC_LEVEL_SET_UNACKNOWLEDGED,
+        GenericLevelOpcode.GENERIC_DELTA_SET,
+        GenericLevelOpcode.GENERIC_DELTA_SET_UNACKNOWLEDGED,
+        GenericLevelOpcode.GENERIC_MOVE_SET,
+        GenericLevelOpcode.GENERIC_MOVE_SET_UNACKNOWLEDGED,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -1406,7 +1406,7 @@ class GenericLevelClient(Model):
             ret = self.send_app(
                 destination,
                 app_index=app_index,
-                opcode=GenericLevelOpcode.LEVEL_SET_UNACKNOWLEDGED,
+                opcode=GenericLevelOpcode.GENERIC_LEVEL_SET_UNACKNOWLEDGED,
                 params=dict(
                     level=level,
                     tid=tid,
@@ -1428,10 +1428,10 @@ class GenericLevelClient(Model):
 class LightLightnessServer(Model):
     MODEL_ID = (None, 0x1300)
     OPCODES = {
-        LightLightnessOpcode.LIGHTNESS_GET,
-        LightLightnessOpcode.LIGHTNESS_SET,
-        LightLightnessOpcode.LIGHTNESS_SET_UNACKNOWLEDGED,
-        LightLightnessOpcode.LIGHTNESS_STATUS,
+        LightLightnessOpcode.LIGHT_LIGHTNESS_GET,
+        LightLightnessOpcode.LIGHT_LIGHTNESS_SET,
+        LightLightnessOpcode.LIGHT_LIGHTNESS_SET_UNACKNOWLEDGED,
+        LightLightnessOpcode.LIGHT_LIGHTNESS_STATUS,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -1440,10 +1440,10 @@ class LightLightnessServer(Model):
 class LightLightnessSetupServer(Model):
     MODEL_ID = (None, 0x1301)
     OPCODES = {
-        LightLightnessSetupOpcode.LIGHTNESS_DEFAULT_SET,
-        LightLightnessSetupOpcode.LIGHTNESS_DEFAULT_SET_UNACKNOWLEDGED,
-        LightLightnessSetupOpcode.LIGHTNESS_RANGE_SET,
-        LightLightnessSetupOpcode.LIGHTNESS_RANGE_SET_UNACKNOWLEDGED,
+        LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_DEFAULT_SET,
+        LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_DEFAULT_SET_UNACKNOWLEDGED,
+        LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET,
+        LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET_UNACKNOWLEDGED,
     }
     SUBSCRIBE = True
 
@@ -1451,8 +1451,8 @@ class LightLightnessSetupServer(Model):
 class LightLightnessClient(Model):
     MODEL_ID = (None, 0x1302)
     OPCODES = {
-        LightLightnessOpcode.LIGHTNESS_STATUS,
-        LightLightnessOpcode.LIGHTNESS_RANGE_STATUS,
+        LightLightnessOpcode.LIGHT_LIGHTNESS_STATUS,
+        LightLightnessOpcode.LIGHT_LIGHTNESS_RANGE_STATUS,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -1471,7 +1471,7 @@ class LightLightnessClient(Model):
             ret = self.send_app(
                 destination,
                 app_index=app_index,
-                opcode=LightLightnessSetupOpcode.LIGHTNESS_RANGE_SET_UNACKNOWLEDGED,
+                opcode=LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET_UNACKNOWLEDGED,
                 params=dict(range_min=min_lightness, range_max=max_lightness,),
             )
 
@@ -1495,7 +1495,7 @@ class LightLightnessClient(Model):
             self.send_app,
             destination=destination,
             app_index=app_index,
-            opcode=LightLightnessSetupOpcode.LIGHTNESS_RANGE_SET,
+            opcode=LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET,
             params=dict(range_min=min_lightness, range_max=max_lightness, tid=self.tid()),
         )
 
@@ -1503,7 +1503,7 @@ class LightLightnessClient(Model):
             source=destination,
             app_index=0,
             destination=None,
-            opcode=LightLightnessOpcode.LIGHTNESS_RANGE_STATUS,
+            opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_RANGE_STATUS,
             params=dict(),
         )
 
@@ -1529,7 +1529,7 @@ class LightLightnessClient(Model):
                 self.send_app,
                 node,
                 app_index=app_index,
-                opcode=LightLightnessOpcode.LIGHTNESS_RANGE_GET,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_RANGE_GET,
                 params=dict(),
             )
             for node in nodes
@@ -1540,7 +1540,7 @@ class LightLightnessClient(Model):
                 node,
                 app_index=app_index,
                 destination=None,
-                opcode=LightLightnessOpcode.LIGHTNESS_RANGE_STATUS,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_RANGE_STATUS,
                 params=dict(),
             )
             for node in nodes
@@ -1571,7 +1571,7 @@ class LightLightnessClient(Model):
                 self.send_app,
                 node,
                 app_index=app_index,
-                opcode=LightLightnessOpcode.LIGHTNESS_GET,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_GET,
                 params=dict(),
             )
             for node in nodes
@@ -1582,7 +1582,7 @@ class LightLightnessClient(Model):
                 node,
                 app_index=0,
                 destination=None,
-                opcode=LightLightnessOpcode.LIGHTNESS_STATUS,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_STATUS,
                 params=dict(),
             )
             for node in nodes
@@ -1619,7 +1619,7 @@ class LightLightnessClient(Model):
             ret = self.send_app(
                 destination,
                 app_index=app_index,
-                opcode=LightLightnessOpcode.LIGHTNESS_SET_UNACKNOWLEDGED,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_SET_UNACKNOWLEDGED,
                 params=dict(lightness=lightness, delay=remaining_delay, tid=tid, transition_time=transition_time)
             )
             remaining_delay = max(0.0, remaining_delay - send_interval)
@@ -1645,7 +1645,7 @@ class LightLightnessClient(Model):
                 self.send_app,
                 node,
                 app_index=app_index,
-                opcode=LightLightnessOpcode.LIGHTNESS_SET,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_SET,
                 params=dict(lightness=lightness, tid=self.tid()),
             )
             for node in nodes
@@ -1656,7 +1656,7 @@ class LightLightnessClient(Model):
                 node,
                 app_index=0,
                 destination=None,
-                opcode=LightLightnessOpcode.LIGHTNESS_STATUS,
+                opcode=LightLightnessOpcode.LIGHT_LIGHTNESS_STATUS,
                 params=dict(),
             )
             for node in nodes
@@ -1775,18 +1775,18 @@ class SensorClient(Model):
 class LightCTLClient(Model):
     MODEL_ID = (None, 0x1305)
     OPCODES = {
-        LightCTLOpcode.CTL_GET,
-        LightCTLOpcode.CTL_SET,
-        LightCTLOpcode.CTL_SET_UNACKNOWLEDGED,
-        LightCTLOpcode.CTL_STATUS,
-        LightCTLOpcode.CTL_TEMPERATURE_GET,
-        LightCTLOpcode.CTL_TEMPERATURE_RANGE_GET,
-        LightCTLOpcode.CTL_TEMPERATURE_RANGE_STATUS,
-        LightCTLOpcode.CTL_TEMPERATURE_SET,
-        LightCTLOpcode.CTL_TEMPERATURE_SET_UNACKNOWLEDGED,
-        LightCTLOpcode.CTL_TEMPERATURE_STATUS,
-        LightCTLOpcode.CTL_TEMPERATURE_DEFAULT_GET,
-        LightCTLOpcode.CTL_TEMPERATURE_DEFAULT_STATUS,
+        LightCTLOpcode.LIGHT_CTL_GET,
+        LightCTLOpcode.LIGHT_CTL_SET,
+        LightCTLOpcode.LIGHT_CTL_SET_UNACKNOWLEDGED,
+        LightCTLOpcode.LIGHT_CTL_STATUS,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_GET,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_RANGE_GET,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_RANGE_STATUS,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET_UNACKNOWLEDGED,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_STATUS,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_DEFAULT_GET,
+        LightCTLOpcode.LIGHT_CTL_TEMPERATURE_DEFAULT_STATUS,
     }
     PUBLISH = True
     SUBSCRIBE = True
@@ -1804,7 +1804,7 @@ class LightCTLClient(Model):
                 self.send_app,
                 node,
                 app_index=app_index,
-                opcode=LightCTLOpcode.CTL_TEMPERATURE_GET,
+                opcode=LightCTLOpcode.LIGHT_CTL_TEMPERATURE_GET,
                 params=dict(),
             )
             for node in nodes
@@ -1815,7 +1815,7 @@ class LightCTLClient(Model):
                 node,
                 app_index=0,
                 destination=None,
-                opcode=LightCTLOpcode.CTL_TEMPERATURE_STATUS,
+                opcode=LightCTLOpcode.LIGHT_CTL_TEMPERATURE_STATUS,
                 params=dict(),
             )
             for node in nodes
@@ -1847,7 +1847,7 @@ class LightCTLClient(Model):
                 self.send_app,
                 node,
                 app_index=app_index,
-                opcode=LightCTLOpcode.CTL_TEMPERATURE_SET,
+                opcode=LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET,
                 params=dict(
                     ctl_temperature=ctl_temperature, ctl_delta_uv=0, tid=self.tid()
                 ),
@@ -1860,7 +1860,7 @@ class LightCTLClient(Model):
                 node,
                 app_index=0,
                 destination=None,
-                opcode=LightCTLOpcode.CTL_TEMPERATURE_STATUS,
+                opcode=LightCTLOpcode.LIGHT_CTL_TEMPERATURE_STATUS,
                 params=dict(),
             )
             for node in nodes

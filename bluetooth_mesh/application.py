@@ -30,8 +30,8 @@ import logging
 import socket
 import struct
 from enum import Enum
-from os import urandom
 from functools import lru_cache, partial
+from os import urandom
 from typing import (
     Any,
     Awaitable,

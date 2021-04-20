@@ -32,10 +32,10 @@ from bluetooth_mesh.messages.util import EnumAdapter, Opcode
 
 
 class GenericOnOffOpcode(IntEnum):
-    ONOFF_GET = 0x8201
-    ONOFF_SET = 0x8202
-    ONOFF_SET_UNACKNOWLEDGED = 0x8203
-    ONOFF_STATUS = 0x8204
+    GENERIC_ONOFF_GET = 0x8201
+    GENERIC_ONOFF_SET = 0x8202
+    GENERIC_ONOFF_SET_UNACKNOWLEDGED = 0x8203
+    GENERIC_ONOFF_STATUS = 0x8204
 
 
 # fmt: on
@@ -50,7 +50,10 @@ GenericOnOffSetOptional = Struct(
     "delay" / Delay(Int8ul),
 )
 
-GenericOnOffSet = Select(GenericOnOffSetOptional, GenericOnOffSetMinimal)
+GenericOnOffSet = Select(
+    optional=GenericOnOffSetOptional,
+    minimal=GenericOnOffSetMinimal
+)
 
 GenericOnOffStatusMinimal = Struct("present_onoff" / Int8ul)
 
@@ -60,19 +63,20 @@ GenericOnOffStatusOptional = Struct(
     "remaining_time" / TransitionTimeAdapter(TransitionTime, allow_unknown=True),
 )
 
-GenericOnOffStatus = Select(GenericOnOffStatusOptional, GenericOnOffStatusMinimal)
-
+GenericOnOffStatus = Select(
+    optional=GenericOnOffStatusOptional,
+    minimal=GenericOnOffStatusMinimal
+)
 
 GenericOnOffMessage = Struct(
     "opcode" / Opcode(GenericOnOffOpcode),
-    "params"
-    / Switch(
+    "params" / Switch(
         this.opcode,
         {
-            GenericOnOffOpcode.ONOFF_GET: GenericOnOffGet,
-            GenericOnOffOpcode.ONOFF_SET: GenericOnOffSet,
-            GenericOnOffOpcode.ONOFF_SET_UNACKNOWLEDGED: GenericOnOffSet,
-            GenericOnOffOpcode.ONOFF_STATUS: GenericOnOffStatus,
+            GenericOnOffOpcode.GENERIC_ONOFF_GET: GenericOnOffGet,
+            GenericOnOffOpcode.GENERIC_ONOFF_SET: GenericOnOffSet,
+            GenericOnOffOpcode.GENERIC_ONOFF_SET_UNACKNOWLEDGED: GenericOnOffSet,
+            GenericOnOffOpcode.GENERIC_ONOFF_STATUS: GenericOnOffStatus,
         },
     ),
 )

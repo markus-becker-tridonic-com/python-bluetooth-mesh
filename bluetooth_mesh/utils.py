@@ -27,7 +27,18 @@ from concurrent.futures._base import CancelledError
 from contextlib import suppress
 from functools import wraps
 from inspect import isawaitable
-from typing import Any, Callable, Hashable, Iterable, Mapping, Optional, TypeVar, Awaitable, Dict, Tuple
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+)
 
 from typing_extensions import Protocol
 

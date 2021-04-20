@@ -1019,7 +1019,7 @@ def test_build_config_message():
 
     data = ConfigMessage.build(
         dict(
-            opcode=ConfigOpcode.APPKEY_ADD,
+            opcode=ConfigOpcode.CONFIG_APPKEY_ADD,
             params=dict(app_key_index=1, net_key_index=1, app_key=key,),
         )
     )
@@ -1033,7 +1033,7 @@ def test_parse_config_message():
     msg = ConfigMessage.parse(bytes.fromhex("00011000") + key)
 
     assert msg == dict(
-        opcode=ConfigOpcode.APPKEY_ADD,
+        opcode=ConfigOpcode.CONFIG_APPKEY_ADD,
         params=dict(app_key_index=1, net_key_index=1, app_key=key,),
     )
 

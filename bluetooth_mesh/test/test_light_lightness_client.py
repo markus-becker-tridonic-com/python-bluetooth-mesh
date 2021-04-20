@@ -21,10 +21,10 @@
 #
 # pylint: disable=redefined-outer-name, invalid-name
 import asynctest
-from asynctest import ANY, mock, call
+from asynctest import ANY, call, mock
 
 from bluetooth_mesh import Element, LightLightnessClient
-from bluetooth_mesh.messages import LightLightnessOpcode, LightLightnessMessage
+from bluetooth_mesh.messages import LightLightnessMessage, LightLightnessOpcode
 from bluetooth_mesh.messages.config import GATTNamespaceDescriptor
 from bluetooth_mesh.messages.generic import LightLightnessSetupMessage
 from bluetooth_mesh.messages.generic.light import LightLightnessSetupOpcode
@@ -89,7 +89,7 @@ async def test_set_lightness_range_calls_node_interface_with_appropriate_argumen
 
     data = LightLightnessSetupMessage.build(
         {
-            "opcode": LightLightnessSetupOpcode.LIGHTNESS_RANGE_SET_UNACKNOWLEDGED,
+            "opcode": LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET_UNACKNOWLEDGED,
             "params": {"range_min": 0, "range_max": 100,},
         }
     )
@@ -117,7 +117,7 @@ async def test_set_lightness_calls_node_interface_with_appropriate_arguments(
 
     frames = [
         LightLightnessMessage.build({
-            "opcode": LightLightnessOpcode.LIGHTNESS_SET_UNACKNOWLEDGED,
+            "opcode": LightLightnessOpcode.LIGHT_LIGHTNESS_SET_UNACKNOWLEDGED,
             "params": dict(lightness=0, tid=0, transition_time=0, delay=d)
         }) for d in [
             0.50, 0.45, 0.40, 0.35, 0.30, 0.25
