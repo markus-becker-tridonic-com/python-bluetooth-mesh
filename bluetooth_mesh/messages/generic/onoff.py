@@ -51,8 +51,7 @@ GenericOnOffSetOptional = Struct(
 )
 
 GenericOnOffSet = Select(
-    optional=GenericOnOffSetOptional,
-    minimal=GenericOnOffSetMinimal
+    optional=GenericOnOffSetOptional, minimal=GenericOnOffSetMinimal
 )
 
 GenericOnOffStatusMinimal = Struct("present_onoff" / Int8ul)
@@ -64,13 +63,13 @@ GenericOnOffStatusOptional = Struct(
 )
 
 GenericOnOffStatus = Select(
-    optional=GenericOnOffStatusOptional,
-    minimal=GenericOnOffStatusMinimal
+    optional=GenericOnOffStatusOptional, minimal=GenericOnOffStatusMinimal
 )
 
 GenericOnOffMessage = Struct(
     "opcode" / Opcode(GenericOnOffOpcode),
-    "params" / Switch(
+    "params"
+    / Switch(
         this.opcode,
         {
             GenericOnOffOpcode.GENERIC_ONOFF_GET: GenericOnOffGet,
