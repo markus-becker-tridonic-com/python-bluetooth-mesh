@@ -27,6 +27,7 @@ from ipaddress import IPv4Address
 from construct import (
     Adapter,
     Bit,
+    BitsInteger,
     BitStruct,
     Bitwise,
     Computed,
@@ -35,10 +36,12 @@ from construct import (
     Embedded,
     Enum,
     ExprValidator,
+    FormatField,
     Int8ub,
     Int16ub,
     Int24ub,
     Rebuild,
+    Renamed,
     Restreamed,
     Select,
     SizeofError,
@@ -49,6 +52,14 @@ from construct import (
     stream_read,
     stream_write,
     this,
+)
+
+from bluetooth_mesh.messages.capnproto import (
+    CapNProtoTypeAdapter,
+    bits_count_to_uint_type,
+    bits_integer_to_type,
+    extract_renamed,
+    format_field_to_type,
 )
 
 
@@ -66,7 +77,10 @@ def Reversed(subcon):
     )
 
 
-class BitListAdapter(Adapter):
+class BitListAdapter(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "List(Bool)"
+
     def __init__(self, subcon, reversed):
         super().__init__(subcon)
         self.reversed = reversed
@@ -99,7 +113,7 @@ def EnumAdapter(subcon, enum):
     class _Enum(Enum):
         ENUM = enum
 
-    class _EnumAdapter(Adapter):
+    class _EnumAdapter(CapNProtoTypeAdapter):
         def _decode(self, obj, context, path):
             if obj not in enum._value2member_map_:
                 raise ValidationError("object failed validation: %s" % (obj,))
@@ -114,13 +128,25 @@ def EnumAdapter(subcon, enum):
             except ValueError:
                 raise ValidationError("object failed validation: %s" % (obj,))
 
+        @property
+        def capnproto_type(self) -> str:
+            _, _subcon = extract_renamed(self.__construct_doc__.subcon)
+
+            if isinstance(_subcon, FormatField):
+                return format_field_to_type(_subcon)
+
+            elif isinstance(_subcon, BitsInteger):
+                return bits_integer_to_type(_subcon)
+
+            raise ValueError(f"Unsupported subcon type: {_subcon}")
+
     _EnumAdapter.__construct_doc__ = _Enum(subcon, enum)
 
     return _EnumAdapter(subcon)
 
 
 def LogAdapter(subcon, *, max_value=None, infinity=False):
-    class _LogAdapter(Adapter):
+    class _LogAdapter(CapNProtoTypeAdapter):
         MAX_TYPE_VALUE = int(math.pow(2, subcon.length * 8) - 1)
 
         def _decode(self, obj, context, path):
@@ -157,6 +183,10 @@ def LogAdapter(subcon, *, max_value=None, infinity=False):
 
             return int(value)
 
+        @property
+        def capnproto_type(self) -> str:
+            return bits_count_to_uint_type(subcon.length * 8)
+
     return _LogAdapter(subcon)
 
 
@@ -188,8 +218,28 @@ def EmbeddedBitStruct(name, *args, reversed=False):
 
     bit_struct.__construct_doc__ = Embedded(Struct(*args))
 
+    class EmbeddedBitStructCapNProtoTypeAdapter(CapNProtoTypeAdapter):
+        def __init__(self, subcon, field):
+            self.field = field
+            super().__init__(subcon)
+
+        @property
+        def capnproto_type(self) -> str:
+            _, _subcon = extract_renamed(self.field)
+
+            if isinstance(_subcon, BitsInteger):
+                return bits_integer_to_type(_subcon)
+
+            else:
+                if _subcon.__class__.__name__ == "_EnumAdapter":
+                    return "Bool"
+
+            raise ValueError(f"Unsupported field type: {self.field}")
+
     return (name / Rebuild(bit_struct, dict),) + tuple(
-        i.name / Computed(this[name][i.name]) for i in args if i.name is not None
+        i.name / EmbeddedBitStructCapNProtoTypeAdapter(Computed(this[name][i.name]), i)
+        for i in args
+        if i.name is not None
     )
 
 
@@ -240,7 +290,10 @@ class Opcode(Construct):
         raise SizeofError
 
 
-class DefaultCountValidator(Adapter):
+class DefaultCountValidator(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "Float64"
+
     def __init__(self, subcon, rounding=None, resolution=1.0):
         super().__init__(subcon)
         self.rounding = rounding

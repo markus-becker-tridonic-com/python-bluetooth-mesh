@@ -98,7 +98,7 @@ class SensorSetupOpcode(IntEnum):
         return str(self.value)
 
 
-SensorPropertyId = Select(EnumAdapter(Int16ul, PropertyID), Int16ul)
+SensorPropertyId = Select(enum=EnumAdapter(Int16ul, PropertyID), number=Int16ul)
 
 # fmt: off
 SensorGetMinimal = Struct()
@@ -108,8 +108,8 @@ SensorGetOptional = Struct(
 )
 
 SensorGet = Select(
-    SensorGetOptional,
-    SensorGetMinimal
+    optional=SensorGetOptional,
+    minimal=SensorGetMinimal
 )
 
 SensorSettingsGet = Struct(
@@ -261,7 +261,7 @@ TriggerDelta = Struct(
 #     "fast_cadence_high" / PropertyValue
 # )
 
-SensorMessage = OpcodeMessage({
+SensorDict = {
     SensorOpcode.SENSOR_DESCRIPTOR_GET: SensorGet,
     SensorOpcode.SENSOR_DESCRIPTOR_STATUS: SensorDescriptorStatus,
     SensorOpcode.SENSOR_GET: SensorGet,
@@ -270,10 +270,12 @@ SensorMessage = OpcodeMessage({
     # SensorOpcode.SENSOR_COLUMN_STATUS: 0x00,
     # SensorOpcode.SENSOR_SERIES_GET: SensorSeriesGet,
     # SensorOpcode.SENSOR_SERIES_STATUS: 0x00,
-})
+}
+
+SensorMessage = OpcodeMessage(SensorDict)
 
 
-SensorSetupMessage = OpcodeMessage({
+SensorSetupDict = {
     SensorSetupOpcode.SENSOR_CADENCE_GET: SensorGetOptional,
     # SensorSetupOpcode.SENSOR_CADENCE_SET: SensorCadence,
     # SensorSetupOpcode.SENSOR_CADENCE_SET_UNACKNOWLEDGED: SensorCadence,
@@ -284,5 +286,7 @@ SensorSetupMessage = OpcodeMessage({
     SensorSetupOpcode.SENSOR_SETTING_SET: SensorSettingSet,
     SensorSetupOpcode.SENSOR_SETTING_SET_UNACKNOWLEDGED: SensorSettingSet,
     SensorSetupOpcode.SENSOR_SETTING_STATUS: SensorSettingStatus,
-})
+}
+
+SensorSetupMessage = OpcodeMessage(SensorSetupDict)
 # fmt: on

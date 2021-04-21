@@ -23,6 +23,7 @@ from enum import IntEnum
 
 from construct import Embedded, Int8ul, Int16ul, Select, Struct, Switch, this
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct
 from bluetooth_mesh.messages.config import StatusCodeAdapter
 from bluetooth_mesh.messages.generics import (
     OptionalSetParameters,
@@ -61,20 +62,20 @@ class LightCTLSetupOpcode(IntEnum):
 
 
 # fmt: off
-LightCTLGet = Struct()
+LightCTLGet = CapNProtoStruct()
 
-LightCTLDefault = Struct(
+LightCTLDefault = CapNProtoStruct(
     "ctl_lightness" / Int16ul,
     "ctl_temperature" / Int16ul,
     "ctl_delta_uv" / Int16ul
 )
 
-LightCTLSetMinimal = Struct(
+LightCTLSetMinimal = CapNProtoStruct(
     Embedded(LightCTLDefault),
     "tid" / Int8ul
 )
 
-LightCTLSetOptional = Struct(
+LightCTLSetOptional = CapNProtoStruct(
     Embedded(LightCTLSetMinimal),
     Embedded(OptionalSetParameters)
 )
@@ -84,12 +85,12 @@ LightCTLSet = Select(
     minimal=LightCTLSetMinimal
 )
 
-LightCTLStatusMinimal = Struct(
+LightCTLStatusMinimal = CapNProtoStruct(
     "present_ctl_lightness" / Int16ul,
     "present_ctl_temperature" / Int16ul,
 )
 
-LightCTLStatusOptional = Struct(
+LightCTLStatusOptional = CapNProtoStruct(
     Embedded(LightCTLStatusMinimal),
     "target_ctl_lightness" / Int16ul,
     "target_ctl_temperature" / Int16ul,
@@ -101,12 +102,12 @@ LightCTLStatus = Select(
     minimal=LightCTLStatusMinimal
 )
 
-LightCTLTemperatureStatusMinimal = Struct(
+LightCTLTemperatureStatusMinimal = CapNProtoStruct(
     "present_ctl_temperature" / Int16ul,
     "present_ctl_delta_uv" / Int16ul,
 )
 
-LightCTLTemperatureStatusOptional = Struct(
+LightCTLTemperatureStatusOptional = CapNProtoStruct(
     Embedded(LightCTLTemperatureStatusMinimal),
     "target_ctl_temperature" / Int16ul,
     "target_ctl_delta_uv" / Int16ul,
@@ -118,13 +119,13 @@ LightCTLTemperatureStatus = Select(
     minimal=LightCTLTemperatureStatusMinimal
 )
 
-LightCTLTemperatureSetMinimal = Struct(
+LightCTLTemperatureSetMinimal = CapNProtoStruct(
     "ctl_temperature" / Int16ul,
     "ctl_delta_uv" / Int16ul,
     "tid" / Int8ul
 )
 
-LightCTLTemperatureSetOptional = Struct(
+LightCTLTemperatureSetOptional = CapNProtoStruct(
     Embedded(LightCTLTemperatureSetMinimal),
     Embedded(OptionalSetParameters)
 )
@@ -134,49 +135,52 @@ LightCTLTemperatureSet = Select(
     minimal=LightCTLTemperatureSetMinimal
 )
 
-LightCTLRange = Struct(
+LightCTLRange = CapNProtoStruct(
     "range_min" / Int16ul,
     "range_max" / Int16ul,
 )
 
-LightCTLRangeStatus = Struct(
+LightCTLRangeStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(LightCTLRange)
 )
 
+LightCTLDict = {
+    LightCTLOpcode.LIGHT_CTL_GET: LightCTLGet,
+    LightCTLOpcode.LIGHT_CTL_SET: LightCTLSet,
+    LightCTLOpcode.LIGHT_CTL_SET_UNACKNOWLEDGED: LightCTLSet,
+    LightCTLOpcode.LIGHT_CTL_STATUS: LightCTLStatus,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_GET: LightCTLGet,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_RANGE_GET: LightCTLGet,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_RANGE_STATUS: LightCTLRangeStatus,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET: LightCTLTemperatureSet,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET_UNACKNOWLEDGED: LightCTLTemperatureSet,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_STATUS: LightCTLTemperatureStatus,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_DEFAULT_GET: LightCTLGet,
+    LightCTLOpcode.LIGHT_CTL_TEMPERATURE_DEFAULT_STATUS: LightCTLDefault,
+}
 
 LightCTLMessage = Struct(
     "opcode" / Opcode(LightCTLOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            LightCTLOpcode.LIGHT_CTL_GET: LightCTLGet,
-            LightCTLOpcode.LIGHT_CTL_SET: LightCTLSet,
-            LightCTLOpcode.LIGHT_CTL_SET_UNACKNOWLEDGED: LightCTLSet,
-            LightCTLOpcode.LIGHT_CTL_STATUS: LightCTLStatus,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_GET: LightCTLGet,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_RANGE_GET: LightCTLGet,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_RANGE_STATUS: LightCTLRangeStatus,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET: LightCTLTemperatureSet,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_SET_UNACKNOWLEDGED: LightCTLTemperatureSet,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_STATUS: LightCTLTemperatureStatus,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_DEFAULT_GET: LightCTLGet,
-            LightCTLOpcode.LIGHT_CTL_TEMPERATURE_DEFAULT_STATUS: LightCTLDefault,
-        },
+        LightCTLDict,
     )
 )
 
+
+LightCTLSetupDict = {
+    LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_DEFAULT_SET: LightCTLDefault,
+    LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_DEFAULT_SET_UNACKNOWLEDGED: LightCTLDefault,
+    LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_RANGE_SET: LightCTLRange,
+    LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_RANGE_SET_UNACKNOWLEDGED: LightCTLRange,
+}
 
 LightCTLSetupMessage = Struct(
     "opcode" / Opcode(LightCTLSetupOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_DEFAULT_SET: LightCTLDefault,
-            LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_DEFAULT_SET_UNACKNOWLEDGED: LightCTLDefault,
-            LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_RANGE_SET: LightCTLRange,
-            LightCTLSetupOpcode.LIGHT_CTL_SETUP_TEMPERATURE_RANGE_SET_UNACKNOWLEDGED: LightCTLRange,
-        },
+        LightCTLSetupDict,
     )
 )
 # fmt: on

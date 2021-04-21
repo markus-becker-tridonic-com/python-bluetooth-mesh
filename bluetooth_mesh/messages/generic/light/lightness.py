@@ -23,6 +23,7 @@ from enum import IntEnum
 
 from construct import Embedded, Int8ul, Int16ul, Select, Struct, Switch, this
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct
 from bluetooth_mesh.messages.config import StatusCodeAdapter
 from bluetooth_mesh.messages.generics import (
     OptionalSetParameters,
@@ -63,17 +64,17 @@ class LightLightnessSetupOpcode(IntEnum):
 
 
 # fmt: off
-LightLightnessGet = Struct()
+LightLightnessGet = CapNProtoStruct()
 
-LightLightnessDefault = Struct(
+LightLightnessDefault = CapNProtoStruct(
     "lightness" / Int16ul
 )
 
-LightLightnessStatusMinimal = Struct(
+LightLightnessStatusMinimal = CapNProtoStruct(
     "present_lightness" / Int16ul
 )
 
-LightLightnessStatusOptional = Struct(
+LightLightnessStatusOptional = CapNProtoStruct(
     Embedded(LightLightnessStatusMinimal),
     "target_lightness" / Int16ul,
     "remaining_time" / TransitionTimeAdapter(TransitionTime, allow_unknown=True)
@@ -84,22 +85,22 @@ LightLightnessStatus = Select(
     minimal=LightLightnessStatusMinimal
 )
 
-LightLightnessRange = Struct(
+LightLightnessRange = CapNProtoStruct(
     "range_min" / Int16ul,
     "range_max" / Int16ul,
 )
 
-LightLightnessRangeStatus = Struct(
+LightLightnessRangeStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(LightLightnessRange)
 )
 
-LightLightnessSetMinimal = Struct(
+LightLightnessSetMinimal = CapNProtoStruct(
     "lightness" / Int16ul,
     "tid" / Int8ul
 )
 
-LightLightnessSetOptional = Struct(
+LightLightnessSetOptional = CapNProtoStruct(
     Embedded(LightLightnessSetMinimal),
     Embedded(OptionalSetParameters)
 )
@@ -109,7 +110,7 @@ LightLightnessSet = Select(
     minimal=LightLightnessSetMinimal
 )
 
-LightLightnessMessage = OpcodeMessage({
+LightLightnessDict = {
     LightLightnessOpcode.LIGHT_LIGHTNESS_GET: LightLightnessGet,
     LightLightnessOpcode.LIGHT_LIGHTNESS_SET: LightLightnessSet,
     LightLightnessOpcode.LIGHT_LIGHTNESS_SET_UNACKNOWLEDGED: LightLightnessSet,
@@ -124,12 +125,17 @@ LightLightnessMessage = OpcodeMessage({
     LightLightnessOpcode.LIGHT_LIGHTNESS_DEFAULT_STATUS: LightLightnessDefault,
     LightLightnessOpcode.LIGHT_LIGHTNESS_RANGE_GET: LightLightnessGet,
     LightLightnessOpcode.LIGHT_LIGHTNESS_RANGE_STATUS: LightLightnessRangeStatus,
-})
+}
 
-LightLightnessSetupMessage = OpcodeMessage({
+LightLightnessMessage = OpcodeMessage(LightLightnessDict)
+
+
+LightLightnessSetupDict = {
     LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_DEFAULT_SET: LightLightnessDefault,
     LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_DEFAULT_SET_UNACKNOWLEDGED: LightLightnessDefault,
     LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET: LightLightnessRange,
     LightLightnessSetupOpcode.LIGHT_LIGHTNESS_SETUP_RANGE_SET_UNACKNOWLEDGED: LightLightnessRange,
-})
+}
+
+LightLightnessSetupMessage = OpcodeMessage(LightLightnessSetupDict)
 # fmt: on

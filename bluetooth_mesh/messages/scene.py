@@ -33,6 +33,7 @@ from construct import (
     this,
 )
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct
 from bluetooth_mesh.messages.generics import (
     Delay,
     TransitionTime,
@@ -61,14 +62,14 @@ class SceneStatusCode(IntEnum):
 
 
 # fmt: off
-SceneGet = Struct()
+SceneGet = CapNProtoStruct()
 
-SceneRecallMinimal = Struct(
+SceneRecallMinimal = CapNProtoStruct(
     "scene_number" / ExprValidator(Int16ul, obj_ > 0),
     "tid" / Int8ul,
 )
 
-SceneRecallWithTransition = Struct(
+SceneRecallWithTransition = CapNProtoStruct(
     "scene_number" / ExprValidator(Int16ul, obj_ > 0),
     "tid" / Int8ul,
     "transition_time" / TransitionTimeAdapter(TransitionTime, allow_unknown=False),
@@ -80,12 +81,12 @@ SceneRecall = Select(
     minimal=SceneRecallMinimal
 )
 
-SceneStatusMinimal = Struct(
+SceneStatusMinimal = CapNProtoStruct(
     "status_code" / EnumAdapter(Int8ul, SceneStatusCode),
     "current_scene" / Int16ul
 )
 
-SceneStatusWithTargetScene = Struct(
+SceneStatusWithTargetScene = CapNProtoStruct(
     "status_code" / EnumAdapter(Int8ul, SceneStatusCode),
     "current_scene" / Int16ul,
     "target_scene" / Int16ul,
@@ -97,39 +98,40 @@ SceneStatus = Select(
     minimal=SceneStatusMinimal
 )
 
-SceneRegisterGet = Struct()
+SceneRegisterGet = CapNProtoStruct()
 
-SceneRegisterStatus = Struct(
+SceneRegisterStatus = CapNProtoStruct(
     "status_code" / EnumAdapter(Int8ul, SceneStatusCode),
     "current_scene" / Int16ul,
     "scenes" / Array(16, Int16ul)
 )
 
-SceneSetupWithValidation = Struct(
+SceneSetupWithValidation = CapNProtoStruct(
     "scene_number" / ExprValidator(Int16ul, obj_ > 0),
 )
 
-SceneSetup = Struct(
+SceneSetup = CapNProtoStruct(
     "scene_number" / Int16ul
 )
+
+SceneDict = {
+    SceneOpcode.SCENE_GET: SceneGet,
+    SceneOpcode.SCENE_RECALL: SceneRecall,
+    SceneOpcode.SCENE_RECALL_UNACKNOWLEDGED: SceneRecall,
+    SceneOpcode.SCENE_STATUS: SceneStatus,
+    SceneOpcode.SCENE_REGISTER_GET: SceneRegisterGet,
+    SceneOpcode.SCENE_REGISTER_STATUS: SceneRegisterStatus,
+    SceneOpcode.SCENE_STORE: SceneSetupWithValidation,
+    SceneOpcode.SCENE_STORE_UNACKNOWLEDGED: SceneSetupWithValidation,
+    SceneOpcode.SCENE_DELETE: SceneSetup,
+    SceneOpcode.SCENE_DELETE_UNACKNOWLEDGED: SceneSetup,
+}
 
 SceneMessage = Struct(
     "opcode" / Opcode(SceneOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            SceneOpcode.SCENE_GET: SceneGet,
-            SceneOpcode.SCENE_RECALL: SceneRecall,
-            SceneOpcode.SCENE_RECALL_UNACKNOWLEDGED: SceneRecall,
-            SceneOpcode.SCENE_STATUS: SceneStatus,
-            SceneOpcode.SCENE_REGISTER_GET: SceneRegisterGet,
-            SceneOpcode.SCENE_REGISTER_STATUS: SceneRegisterStatus,
-            SceneOpcode.SCENE_STORE: SceneSetupWithValidation,
-            SceneOpcode.SCENE_STORE_UNACKNOWLEDGED: SceneSetupWithValidation,
-            SceneOpcode.SCENE_DELETE: SceneSetup,
-            SceneOpcode.SCENE_DELETE_UNACKNOWLEDGED: SceneSetup,
-
-        }
+        SceneDict,
     )
 )
 # fmt: on

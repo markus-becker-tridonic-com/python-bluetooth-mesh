@@ -46,6 +46,7 @@ from construct import (
     this,
 )
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct, CapNProtoTypeAdapter
 from bluetooth_mesh.messages.config import EmbeddedBitStruct
 from bluetooth_mesh.messages.util import DefaultCountValidator
 
@@ -169,7 +170,10 @@ class PropertyID(IntEnum):
         return str(self.value)
 
 
-class TimeExponential8Validator(Adapter):
+class TimeExponential8Validator(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "Float64"
+
     def _decode(self, obj, content, path):
         return round(pow(1.1, obj - 64), 4) if obj else 0
 
@@ -177,7 +181,10 @@ class TimeExponential8Validator(Adapter):
         return round(log(obj, 1.1)) + 64 if obj else 0
 
 
-class DateValidator(Adapter):
+class DateValidator(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "UInt64"
+
     EPOCH = datetime(1970, 1, 1)
 
     def _decode(self, obj, content, path):
@@ -195,60 +202,60 @@ def FixedString(size):
 
 
 # time
-TimeMiliseconds24 = Struct(
+TimeMiliseconds24 = CapNProtoStruct(
     "seconds" / DefaultCountValidator(Int24ul, rounding=3, resolution=0.001)
 )
 
-TimeHour24 = Struct(
+TimeHour24 = CapNProtoStruct(
     "hours" / DefaultCountValidator(Int24ul)
 )
 
-TimeSecond16 = Struct(
+TimeSecond16 = CapNProtoStruct(
     "seconds" / DefaultCountValidator(Int16ul)
 )
 
-TimeExponential8 = Struct(
+TimeExponential8 = CapNProtoStruct(
     "seconds" / TimeExponential8Validator(Int8ul)
 )
 
-TimeDecihour8 = Struct(
+TimeDecihour8 = CapNProtoStruct(
     "hour" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.1)
 )
 
-DateUTC = Struct(
+DateUTC = CapNProtoStruct(
     "date" / DateValidator(Int24ul)
 )
 
 
 # electric current
-ElectricCurrent = Struct(
+ElectricCurrent = CapNProtoStruct(
     "current" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01)
 )
 
-AverageCurrent = Struct(
+AverageCurrent = CapNProtoStruct(
     "electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     "sensing_duration" / TimeExponential8,
 )
 
-ElectricCurrentRange = Struct(
+ElectricCurrentRange = CapNProtoStruct(
     "minimum_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     "maximum_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
 )
 
-ElectricCurrentSpecification = Struct(
+ElectricCurrentSpecification = CapNProtoStruct(
     "minimum_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     "typical_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     "maximum_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
 )
 
-ElectricCurrentStatistics = Struct(
+ElectricCurrentStatistics = CapNProtoStruct(
     "average_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     "standard_deviation_electric_current_value" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     Embedded(ElectricCurrentRange),
     "sensing_duration" / TimeExponential8,
 )
 
-RelativeValueInACurrentRange = Struct(
+RelativeValueInACurrentRange = CapNProtoStruct(
     "relative_value" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.5),
     "minimum_current" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01),
     "maximum_current" / DefaultCountValidator(Int16ul, rounding=2, resolution=0.01)
@@ -256,23 +263,22 @@ RelativeValueInACurrentRange = Struct(
 
 
 # voltage
-Voltage = Struct(
+Voltage = CapNProtoStruct(
     "voltage" / DefaultCountValidator(Int16ul, resolution=1/64),
 )
 
-AverageVoltage = Struct(
+AverageVoltage = CapNProtoStruct(
     "voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
     "sensing_duration" / TimeExponential8,
-    Probe(this)
 )
 
-VoltageRange = Struct(
+VoltageRange = CapNProtoStruct(
     "minimum_voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
     "typical_voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
     "maximum_voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
 )
 
-VoltageStatistics = Struct(
+VoltageStatistics = CapNProtoStruct(
     "average_voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
     "standard_deviation_voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
     "minimum_voltage_value" / DefaultCountValidator(Int16ul, resolution=1/64),
@@ -280,7 +286,7 @@ VoltageStatistics = Struct(
     "sensing_duration" / TimeExponential8,
 )
 
-RelativeValueInAVoltageRange = Struct(
+RelativeValueInAVoltageRange = CapNProtoStruct(
     "relative_value" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.5),
     "minimum_voltage" / DefaultCountValidator(Int16ul, resolution=1/64),
     "maximum_voltage" / DefaultCountValidator(Int16ul, resolution=1/64),
@@ -288,16 +294,16 @@ RelativeValueInAVoltageRange = Struct(
 
 
 # energy
-Energy = Struct(
+Energy = CapNProtoStruct(
     "energy" / DefaultCountValidator(Int24ul)
 )
 
-PreciseEnergy = Struct(
+PreciseEnergy = CapNProtoStruct(
     "energy" / DefaultCountValidator(Int32ul)
 )
 
 
-EnergyInAPeriodOfDay = Struct(
+EnergyInAPeriodOfDay = CapNProtoStruct(
     "energy_value" / DefaultCountValidator(Int24ul),
     "start_time" / TimeDecihour8,
     "end_time" / TimeDecihour8,
@@ -305,11 +311,11 @@ EnergyInAPeriodOfDay = Struct(
 
 
 # power
-Power = Struct(
+Power = CapNProtoStruct(
     "power" / DefaultCountValidator(Int24ul, rounding=1, resolution=0.1)
 )
 
-PowerSpecification = Struct(
+PowerSpecification = CapNProtoStruct(
     "minimum_power_value" / DefaultCountValidator(Int24ul, rounding=1, resolution=0.1),
     "typical_power_value" / DefaultCountValidator(Int24ul, rounding=1, resolution=0.1),
     "maximum_power_value" / DefaultCountValidator(Int24ul, rounding=1, resolution=0.1)
@@ -317,33 +323,33 @@ PowerSpecification = Struct(
 
 
 # temperature
-Temperature = Struct(
+Temperature = CapNProtoStruct(
     "temperature" / DefaultCountValidator(Int16sl, rounding=2, resolution=0.01)
 )
 
-Temperature8 = Struct(
+Temperature8 = CapNProtoStruct(
     "temperature" / DefaultCountValidator(Int8sl, rounding=1, resolution=0.5)
 )
 
-TemperatureRange = Struct(
+TemperatureRange = CapNProtoStruct(
     "minimum_temperature" / DefaultCountValidator(Int8sl, rounding=1, resolution=0.5),
     "maximum_temperature" / DefaultCountValidator(Int8sl, rounding=1, resolution=0.5),
 )
 
-Temperature8Statistics = Struct(
+Temperature8Statistics = CapNProtoStruct(
     "average_temperature" / DefaultCountValidator(Int8sl, rounding=1, resolution=0.5),
     "standard_deviation_temperature" / DefaultCountValidator(Int8sl, rounding=1, resolution=0.5),
     Embedded(TemperatureRange),
     "sensing_duration" / TimeExponential8,
 )
 
-Temperature8InAPeriodOfDay = Struct(
+Temperature8InAPeriodOfDay = CapNProtoStruct(
     "temperature" / DefaultCountValidator(Int8sl, rounding=1, resolution=0.5),
     "start_time" / TimeDecihour8,
     "end_time" / TimeDecihour8,
 )
 
-TemperatureStatistics = Struct(
+TemperatureStatistics = CapNProtoStruct(
     "average_temperature" / DefaultCountValidator(Int16sl, rounding=2, resolution=0.01),
     "standard_deviation_temperature" / DefaultCountValidator(Int16sl, rounding=2, resolution=0.01),
     "minimum_temperature" / DefaultCountValidator(Int16sl, rounding=2, resolution=0.01),
@@ -351,7 +357,7 @@ TemperatureStatistics = Struct(
     "sensing_duration" / TimeExponential8,
 )
 
-RelativeValueInATemperatureRange = Struct(
+RelativeValueInATemperatureRange = CapNProtoStruct(
     "relative_value" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.5),
     "minimum_temperature" / DefaultCountValidator(Int16sl, rounding=2, resolution=0.01),
     "maximum_temperature" / DefaultCountValidator(Int16sl, rounding=2, resolution=0.01)
@@ -359,93 +365,93 @@ RelativeValueInATemperatureRange = Struct(
 
 
 # luminosity
-LuminousFlux = Struct(
+LuminousFlux = CapNProtoStruct(
     "luminous_flux" / DefaultCountValidator(Int16ul)
 )
 
-LuminousFluxRange = Struct(
+LuminousFluxRange = CapNProtoStruct(
     "minimum_luminous_flux" / DefaultCountValidator(Int16ul),
     "maximum_luminous_flux" / DefaultCountValidator(Int16ul)
 )
 
-LuminousEnergy = Struct(
+LuminousEnergy = CapNProtoStruct(
     "luminous_energy" / DefaultCountValidator(Int24ul, rounding=1, resolution=1000),
 )
 
-LuminousExposure = Struct(
+LuminousExposure = CapNProtoStruct(
     "luminous_exposure" / DefaultCountValidator(Int24ul, rounding=1, resolution=1000),
 )
 
-LuminousIntensity = Struct(
+LuminousIntensity = CapNProtoStruct(
     "luminous_intensity" / DefaultCountValidator(Int16ul)
 )
 
-LuminousEfficacy = Struct(
+LuminousEfficacy = CapNProtoStruct(
     "luminous_efficacy" / DefaultCountValidator(Int16ul, rounding=1, resolution=0.1)
 )
 
-Illuminance = Struct(
+Illuminance = CapNProtoStruct(
     "illuminance" / DefaultCountValidator(Int24ul, rounding=2, resolution=0.01)
 )
 
-RelativeValueInAnIlluminanceRange = Struct(
+RelativeValueInAnIlluminanceRange = CapNProtoStruct(
     "relative_value" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.5),
     "minimum_illuminance" / DefaultCountValidator(Int24ul, rounding=2, resolution=0.01),
     "maximum_illuminance" / DefaultCountValidator(Int24ul, rounding=2, resolution=0.01)
 )
 
-PerceivedLightness = Struct(
+PerceivedLightness = CapNProtoStruct(
     "perceived_lightness" / Int16ul
 )
 
 
 # counters
-Percentage8 = Struct(
+Percentage8 = CapNProtoStruct(
     "percentage" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.5)
 )
 
-Count16 = Struct(
+Count16 = CapNProtoStruct(
     "count" / DefaultCountValidator(Int16ul)
 )
 
-Count24 = Struct(
+Count24 = CapNProtoStruct(
     "count" / DefaultCountValidator(Int24ul)
 )
 
-Coefficient = Struct(
+Coefficient = CapNProtoStruct(
     "coefficient" / DefaultCountValidator(Int32ul)
 )
 
 
 # chromaticity
-ChromaticityTolerance = Struct(
+ChromaticityTolerance = CapNProtoStruct(
     "chromaticity_tolerance" / DefaultCountValidator(Int8sl, rounding=4, resolution=0.0001)
 )
 
-ChromaticDistanceFromPlanckian = Struct(
+ChromaticDistanceFromPlanckian = CapNProtoStruct(
     "distance_from_planckian" / DefaultCountValidator(Int16sl, rounding=5, resolution=0.00001)
 )
 
-CorrelatedColorTemperature = Struct(
+CorrelatedColorTemperature = CapNProtoStruct(
     "correlated_color_temperature" / DefaultCountValidator(Int16ul, rounding=1, resolution=1)
 )
 
-ChromaticityCoordinates = Struct(
+ChromaticityCoordinates = CapNProtoStruct(
     "chromaticity_x_coordinate" / DefaultCountValidator(Int16ul, resolution=1/0xffff),
     "chromaticity_y_coordinate" / DefaultCountValidator(Int16ul, resolution=1/0xffff)
 )
 
-ColorRenderingIndex = Struct(
+ColorRenderingIndex = CapNProtoStruct(
     "color_rendering_index" / DefaultCountValidator(Int8sl)
 )
 
 
 # misc
-GlobalTradeItemNumber = Struct(
+GlobalTradeItemNumber = CapNProtoStruct(
     "global_trade_item_number" / BytesInteger(6, swapped=True)
 )
 
-Appearance = Struct(  # TODO: check if correct
+Appearance = CapNProtoStruct(  # TODO: check if correct
     *EmbeddedBitStruct(
         "_",
         "category" / BitsInteger(10),
@@ -454,22 +460,22 @@ Appearance = Struct(  # TODO: check if correct
     )
 )
 
-CountryCode = Struct(
+CountryCode = CapNProtoStruct(
     "country_code" / DefaultCountValidator(Int16ul)
 )
 
-Presence = Struct(
+Presence = CapNProtoStruct(
     "presence_detected" / Flag
 )
 
-EventStatistics = Struct(
+EventStatistics = CapNProtoStruct(
     "number_of_events" / Count16,
     "average_event_duration" / TimeSecond16,
     "time_elapsed_since_last_event" / TimeExponential8,
     "sensing_duration" / TimeExponential8,
 )
 
-RelativeRuntimeInAGenericLevelRange = Struct(
+RelativeRuntimeInAGenericLevelRange = CapNProtoStruct(
     "relative_value" / DefaultCountValidator(Int8ul, rounding=1, resolution=0.5),
     "minimum_generic_level" / DefaultCountValidator(Int16ul),
     "maximum_generic_level" / DefaultCountValidator(Int16ul),

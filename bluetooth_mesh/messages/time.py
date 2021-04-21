@@ -40,6 +40,7 @@ from construct import (
     this,
 )
 
+from .capnproto import CapNProtoStruct
 from .util import EmbeddedBitStruct, EnumAdapter, OpcodeMessage
 
 MS_IN_UNCERTAINTY_STEP = 10
@@ -98,7 +99,7 @@ def seconds_to_subsecond(seconds: float) -> int:
     return round((seconds - int(seconds)) * 256)
 
 
-Time = Struct(
+Time = CapNProtoStruct(
     "tai_seconds" / BytesInteger(5, swapped=True),
     StopIf(this.tai_seconds == 0),
     "subsecond" / Int8ul,
@@ -147,32 +148,32 @@ class TimeAdapter(Adapter):
         )
 
 
-TimeRoleMsg = Struct(
+TimeRoleMsg = CapNProtoStruct(
     "time_role" / EnumAdapter(Int8ul, TimeRole)
 )
 
-TimeGet = Struct()
+TimeGet = CapNProtoStruct()
 
 TimeSet = TimeAdapter(Time)
 
 TimeStatus = TimeAdapter(Time)
 
-TimeZoneGet = Struct()
+TimeZoneGet = CapNProtoStruct()
 
-TimeZoneSet = Struct(
+TimeZoneSet = CapNProtoStruct(
     "time_zone_offset_new" / Int8ul,
     "tai_of_zone_change" / BytesInteger(5, swapped=True),
 )
 
-TimeZoneStatus = Struct(
+TimeZoneStatus = CapNProtoStruct(
     "time_zone_offset_current" / Int8ul,
     "time_zone_offset_new" / Int8ul,
     "tai_of_zone_change" / BytesInteger(5, swapped=True),
 )
 
-TAIUTCDeltaGet = Struct()
+TAIUTCDeltaGet = CapNProtoStruct()
 
-TAIUTCDeltaSet = Struct(
+TAIUTCDeltaSet = CapNProtoStruct(
     *TAI_UTC_DeltaPaddedField("tai_utc_delta_new"),
     "tai_of_delta_change" / BytesInteger(5, swapped=True),
 )
@@ -183,7 +184,7 @@ TAIUTCDeltaStatus = Struct(
     "tai_of_delta_change" / BytesInteger(5, swapped=True),
 )
 
-TimeRoleGet = Struct()
+TimeRoleGet = CapNProtoStruct()
 
 TimeRoleSet = TimeRoleMsg
 
@@ -205,9 +206,7 @@ class TimeOpcode(enum.IntEnum):
     TAI_UTC_DELTA_SET = 0x823F
     TAI_UTC_DELTA_STATUS = 0x8240
 
-
-# fmt: off
-TimeMessage = OpcodeMessage({
+TimeDict = {
     TimeOpcode.TIME_GET: TimeGet,
     TimeOpcode.TIME_SET: TimeSet,
     TimeOpcode.TIME_STATUS: TimeStatus,
@@ -219,5 +218,9 @@ TimeMessage = OpcodeMessage({
     TimeOpcode.TAI_UTC_DELTA_STATUS: TAIUTCDeltaStatus,
     TimeOpcode.TIME_ROLE_GET: TimeRoleGet,
     TimeOpcode.TIME_ROLE_SET: TimeRoleSet,
-    TimeOpcode.TIME_ROLE_STATUS: TimeRoleStatus})
+    TimeOpcode.TIME_ROLE_STATUS: TimeRoleStatus
+}
+
+# fmt: off
+TimeMessage = OpcodeMessage(TimeDict)
 # fmt: on

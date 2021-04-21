@@ -33,29 +33,30 @@ from construct import (
     this,
 )
 
+from .capnproto import CapNProtoStruct
 from .util import EnumAdapter, Opcode
 
 # fmt: off
-FaultTest = Struct(
+FaultTest = CapNProtoStruct(
     "test_id" / Int8ul,
     "company_id" / Int16ul,
 )
 
-FaultStatus = Struct(
+FaultStatus = CapNProtoStruct(
     "test_id" / Int8ul,
     "company_id" / Int16ul,
     "fault_array" / Default(GreedyRange(Int8ul), [])
 )
 
-FastPeriodDivisor = Struct(
+FastPeriodDivisor = CapNProtoStruct(
     "fast_period_divisor" / ExprValidator(Int8ul, obj_ <= 15)
 )
 
-Attention = Struct(
+Attention = CapNProtoStruct(
     "attention" / Int8ul
 )
 
-CompanyId = Struct(
+CompanyId = CapNProtoStruct(
     "company_id" / Int16ul
 )
 
@@ -69,13 +70,13 @@ HealthFaultTest = FaultTest
 
 HealthFaultStatus = FaultStatus
 
-HealthPeriodGet = Struct()
+HealthPeriodGet = CapNProtoStruct()
 
 HealthPeriodSet = FastPeriodDivisor
 
 HealthPeriodStatus = FastPeriodDivisor
 
-HealthAttentionGet = Struct()
+HealthAttentionGet = CapNProtoStruct()
 
 HealthAttentionSet = Attention
 
@@ -101,28 +102,30 @@ class HealthOpcode(enum.IntEnum):
     HEALTH_PERIOD_STATUS = 0x8037
 
 
+HealthDict = {
+    HealthOpcode.HEALTH_ATTENTION_GET: HealthAttentionGet,
+    HealthOpcode.HEALTH_ATTENTION_SET: HealthAttentionSet,
+    HealthOpcode.HEALTH_ATTENTION_SET_UNACKNOWLEDGED: HealthAttentionSet,
+    HealthOpcode.HEALTH_ATTENTION_STATUS: HealthAttentionStatus,
+    HealthOpcode.HEALTH_CURRENT_STATUS: HealthCurrentStatus,
+    HealthOpcode.HEALTH_FAULT_CLEAR: HealthFaultClear,
+    HealthOpcode.HEALTH_FAULT_CLEAR_UNACKNOWLEDGED: HealthFaultClear,
+    HealthOpcode.HEALTH_FAULT_GET: HealthFaultGet,
+    HealthOpcode.HEALTH_FAULT_STATUS: HealthCurrentStatus,
+    HealthOpcode.HEALTH_FAULT_TEST: HealthFaultTest,
+    HealthOpcode.HEALTH_FAULT_TEST_UNACKNOWLEDGED: HealthFaultTest,
+    HealthOpcode.HEALTH_PERIOD_GET: HealthPeriodGet,
+    HealthOpcode.HEALTH_PERIOD_SET: HealthPeriodSet,
+    HealthOpcode.HEALTH_PERIOD_SET_UNACKNOWLEDGED: HealthPeriodSet,
+    HealthOpcode.HEALTH_PERIOD_STATUS: HealthPeriodStatus,
+}
+
 # fmt: off
 HealthMessage = Struct(
     "opcode" / Opcode(HealthOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            HealthOpcode.HEALTH_ATTENTION_GET: HealthAttentionGet,
-            HealthOpcode.HEALTH_ATTENTION_SET: HealthAttentionSet,
-            HealthOpcode.HEALTH_ATTENTION_SET_UNACKNOWLEDGED: HealthAttentionSet,
-            HealthOpcode.HEALTH_ATTENTION_STATUS: HealthAttentionStatus,
-            HealthOpcode.HEALTH_CURRENT_STATUS: HealthCurrentStatus,
-            HealthOpcode.HEALTH_FAULT_CLEAR: HealthFaultClear,
-            HealthOpcode.HEALTH_FAULT_CLEAR_UNACKNOWLEDGED: HealthFaultClear,
-            HealthOpcode.HEALTH_FAULT_GET: HealthFaultGet,
-            HealthOpcode.HEALTH_FAULT_STATUS: HealthCurrentStatus,
-            HealthOpcode.HEALTH_FAULT_TEST: HealthFaultTest,
-            HealthOpcode.HEALTH_FAULT_TEST_UNACKNOWLEDGED: HealthFaultTest,
-            HealthOpcode.HEALTH_PERIOD_GET: HealthPeriodGet,
-            HealthOpcode.HEALTH_PERIOD_SET: HealthPeriodSet,
-            HealthOpcode.HEALTH_PERIOD_SET_UNACKNOWLEDGED: HealthPeriodSet,
-            HealthOpcode.HEALTH_PERIOD_STATUS: HealthPeriodStatus,
-        }
+        HealthDict,
     )
 )
 # fmt: on

@@ -47,6 +47,7 @@ from construct import (
     this,
 )
 
+from .capnproto import CapNProtoStruct, CapNProtoTypeAdapter
 from .util import (
     BitList,
     EmbeddedBitStruct,
@@ -421,11 +422,11 @@ FriendAdapter = EnumAdapter(Int8ul, Friend)
 TTL = RangeValidator(Int8ul, max_value=0x7F)
 
 # fmt: off
-SIGModelId = Struct(
+SIGModelId = CapNProtoStruct(
     "model_id" / Int16ul,
 )
 
-VendorModelId = Struct(
+VendorModelId = CapNProtoStruct(
     "vendor_id" / Int16ul,
     "model_id" / Int16ul,
 )
@@ -543,7 +544,7 @@ Int12ul = ExprValidator(
     (obj_ & 0xF000) == 0x00
 )
 
-CompositionDataElement = Struct(
+CompositionDataElement = CapNProtoStruct(
     "location" / GATTNamespaceDescriptorAdapter,
     "SIG_number" / Rebuild(Int8ul, len_(this["SIG_models"])),
     "vendor_number" / Rebuild(Int8ul, len_(this["vendor_models"])),
@@ -551,7 +552,7 @@ CompositionDataElement = Struct(
     "vendor_models" / VendorModelId[this["vendor_number"]],
 )
 
-CompositionData = Struct(
+CompositionData = CapNProtoStruct(
     "CID" / Int16ul,
     "PID" / Int16ul,
     "VID" / Int16ul,
@@ -568,7 +569,10 @@ Retransmit = BitStruct(
 # fmt: on
 
 
-class RetransmitAdapter(Adapter):
+class RetransmitAdapter(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "UInt32"
+
     def __init__(self, subcon, interval):
         self.interval = interval
         self.subcon = subcon
@@ -625,7 +629,10 @@ AppKeyIndex = SingleKeyIndex("app_key_index")
 NetKeyIndex = SingleKeyIndex("net_key_index")
 
 
-class KeyIndicesAdapter(Adapter):
+class KeyIndicesAdapter(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "List(UInt16)"
+
     def _decode(self, obj, context, path):
         """
         Flatten a list dictionaries into list of items:
@@ -710,60 +717,60 @@ PublishPeriod = BitStruct(
     "number_of_steps" / BitsInteger(6),
 )
 
-ConfigBeaconGet = Struct()
+ConfigBeaconGet = CapNProtoStruct()
 
-ConfigBeaconSet = Struct(
+ConfigBeaconSet = CapNProtoStruct(
     "beacon" / SecureNetworkBeaconAdapter,
 )
 
 ConfigBeaconStatus = ConfigBeaconSet
 
-ConfigCompositionDataGet = Struct(
+ConfigCompositionDataGet = CapNProtoStruct(
     "page" / Int8ul,
 )
 
-ConfigCompositionDataStatus = Struct(
+ConfigCompositionDataStatus = CapNProtoStruct(
     "page" / Int8ul,
     "data" / Switch(
         this.page,
         {
-            0: CompositionData,
+            "page0": CompositionData,
         },
         default=GreedyBytes
     ),
 )
 
-ConfigDefaultTTLGet = Struct()
+ConfigDefaultTTLGet = CapNProtoStruct()
 
-ConfigDefaultTTLSet = Struct(
+ConfigDefaultTTLSet = CapNProtoStruct(
     "TTL" / TTL,
 )
 
 ConfigDefaultTTLStatus = ConfigDefaultTTLSet
 
-ConfigGATTProxyGet = Struct()
+ConfigGATTProxyGet = CapNProtoStruct()
 
-ConfigGATTProxySet = Struct(
+ConfigGATTProxySet = CapNProtoStruct(
     "GATT_proxy" / GATTProxyAdapter,
 )
 
 ConfigGATTProxyStatus = ConfigGATTProxySet
 
-ConfigRelayGet = Struct()
+ConfigRelayGet = CapNProtoStruct()
 
-ConfigRelaySet = Struct(
+ConfigRelaySet = CapNProtoStruct(
     "relay" / RelayAdapter,
     "retransmit" / RelayRetransmit,
 )
 
 ConfigRelayStatus = ConfigRelaySet
 
-ConfigModelPublicationGet = Struct(
+ConfigModelPublicationGet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "model" / ModelId,
 )
 
-ConfigModelPublicationSet = Struct(
+ConfigModelPublicationSet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "publish_address" / NotVirtualLabel,
     *EmbeddedBitStruct(
@@ -779,12 +786,12 @@ ConfigModelPublicationSet = Struct(
     "model" / ModelId,
 )
 
-ConfigModelPublicationStatus = Struct(
+ConfigModelPublicationStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigModelPublicationSet)
 )
 
-ConfigModelPublicationVASet = Struct(
+ConfigModelPublicationVASet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "publish_address" / Bytes(16),
     *EmbeddedBitStruct(
@@ -800,7 +807,7 @@ ConfigModelPublicationVASet = Struct(
     "model" / ModelId,
 )
 
-ConfigModelSubscriptionAdd = Struct(
+ConfigModelSubscriptionAdd = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "address" / SubscriptionAddress,
     "model" / ModelId,
@@ -809,7 +816,7 @@ ConfigModelSubscriptionAdd = Struct(
 ConfigModelSubscriptionDelete = ConfigModelSubscriptionAdd
 ConfigModelSubscriptionOverwrite = ConfigModelSubscriptionAdd
 
-ConfigModelSubscriptionVAAdd = Struct(
+ConfigModelSubscriptionVAAdd = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "label" / Bytes(16),
     "model" / ModelId,
@@ -818,105 +825,105 @@ ConfigModelSubscriptionVAAdd = Struct(
 ConfigModelSubscriptionVADelete = ConfigModelSubscriptionVAAdd
 ConfigModelSubscriptionVAOverwrite = ConfigModelSubscriptionVAAdd
 
-ConfigModelSubscriptionStatus = Struct(
+ConfigModelSubscriptionStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     "element_address" / UnicastAddress,
     "address" / StatusSubscriptionAddress,
     "model" / ModelId,
 )
 
-ConfigModelSubscriptionDeleteAll = Struct(
+ConfigModelSubscriptionDeleteAll = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "model" / ModelId,
 )
 
-ConfigSIGModelSubscriptionGet = Struct(
+ConfigSIGModelSubscriptionGet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "model" / SIGModelId,
 )
 
-ConfigSIGModelSubscriptionList = Struct(
+ConfigSIGModelSubscriptionList = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     "element_address" / UnicastAddress,
     "model" / SIGModelId,
     "addresses" / GreedyRange(Int16ul),
 )
 
-ConfigVendorModelSubscriptionGet = Struct(
+ConfigVendorModelSubscriptionGet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "model" / VendorModelId,
 )
 
-ConfigVendorModelSubscriptionList = Struct(
+ConfigVendorModelSubscriptionList = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     "element_address" / UnicastAddress,
     "model" / VendorModelId,
     "addresses" / GreedyRange(Int16ul),
 )
 
-ConfigNetKeyAdd = Struct(
+ConfigNetKeyAdd = CapNProtoStruct(
     *NetKeyIndex,
     "net_key" / Bytes(16),
 )
 
 ConfigNetKeyUpdate = ConfigNetKeyAdd
 
-ConfigNetKeyDelete = Struct(
+ConfigNetKeyDelete = CapNProtoStruct(
     *NetKeyIndex,
 )
 
-ConfigNetKeyStatus = Struct(
+ConfigNetKeyStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     *NetKeyIndex,
 )
 
-ConfigNetKeyGet = Struct()
+ConfigNetKeyGet = CapNProtoStruct()
 
-ConfigNetKeyList = Struct(
+ConfigNetKeyList = CapNProtoStruct(
     "net_key_indices" / KeyIndices
 )
 
-ConfigAppKeyAdd = Struct(
+ConfigAppKeyAdd = CapNProtoStruct(
     *NetAndAppKeyIndex,
     "app_key" / Bytes(16),
 )
 
 ConfigAppKeyUpdate = ConfigAppKeyAdd
 
-ConfigAppKeyDelete = Struct(
+ConfigAppKeyDelete = CapNProtoStruct(
     *NetAndAppKeyIndex,
 )
 
-ConfigAppKeyStatus = Struct(
+ConfigAppKeyStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     *NetAndAppKeyIndex,
 )
 
-ConfigAppKeyGet = Struct(
+ConfigAppKeyGet = CapNProtoStruct(
     *NetKeyIndex
 )
 
-ConfigAppKeyList = Struct(
+ConfigAppKeyList = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     *NetKeyIndex,
     "app_key_indices" / KeyIndices,
 )
 
-ConfigNodeIdentityGet = Struct(
+ConfigNodeIdentityGet = CapNProtoStruct(
     *NetKeyIndex,
 )
 
-ConfigNodeIdentitySet = Struct(
+ConfigNodeIdentitySet = CapNProtoStruct(
     *NetKeyIndex,
     "identity" / NodeIdentityAdapter,
 )
 
-ConfigNodeIdentityStatus = Struct(
+ConfigNodeIdentityStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigNodeIdentitySet),
 )
 
-ConfigModelAppBind = Struct(
+ConfigModelAppBind = CapNProtoStruct(
     "element_address" / UnicastAddress,
     *AppKeyIndex,
     "model" / ModelId,
@@ -924,55 +931,55 @@ ConfigModelAppBind = Struct(
 
 ConfigModelAppUnbind = ConfigModelAppBind
 
-ConfigModelAppStatus = Struct(
+ConfigModelAppStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigModelAppBind),
 )
 
-ConfigSIGModelAppGet = Struct(
+ConfigSIGModelAppGet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "model" / SIGModelId,
 )
 
-ConfigSIGModelAppList = Struct(
+ConfigSIGModelAppList = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigSIGModelAppGet),
-    "app key indices" / KeyIndices,
+    "app_key_indices" / KeyIndices,
 )
 
-ConfigVendorModelAppGet = Struct(
+ConfigVendorModelAppGet = CapNProtoStruct(
     "element_address" / UnicastAddress,
     "model" / VendorModelId,
 )
 
-ConfigVendorModelAppList = Struct(
+ConfigVendorModelAppList = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigVendorModelAppGet),
-    "app key indices" / KeyIndices,
+    "app_key_indices" / KeyIndices,
 )
 
-ConfigNodeReset = Struct()
+ConfigNodeReset = CapNProtoStruct()
 
-ConfigNodeResetStatus = Struct()
+ConfigNodeResetStatus = CapNProtoStruct()
 
-ConfigFriendGet = Struct()
+ConfigFriendGet = CapNProtoStruct()
 
-ConfigFriendSet = Struct(
+ConfigFriendSet = CapNProtoStruct(
     "friend" / FriendAdapter,
 )
 
 ConfigFriendStatus = ConfigFriendSet
 
-ConfigKeyRefreshPhaseGet = Struct(
+ConfigKeyRefreshPhaseGet = CapNProtoStruct(
     *NetKeyIndex,
 )
 
-ConfigKeyRefreshPhaseSet = Struct(
+ConfigKeyRefreshPhaseSet = CapNProtoStruct(
     Embedded(ConfigKeyRefreshPhaseGet),
     "transition" / EnumAdapter(Int8ul, KeyRefreshTransition),
 )
 
-ConfigKeyRefreshPhaseStatus = Struct(
+ConfigKeyRefreshPhaseStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     *NetKeyIndex,
     "phase" / EnumAdapter(Int8ul, KeyRefreshPhase),
@@ -982,9 +989,9 @@ ConfigHeartbeatPublicationFeatures = ExprValidator(Int16ul, lambda obj, ctx: obj
 
 ConfigHeartbeatHops = ExprValidator(Int8ul, lambda obj, ctx: obj <= 0x7F)
 
-ConfigHeartbeatPublicationGet = Struct()
+ConfigHeartbeatPublicationGet = CapNProtoStruct()
 
-ConfigHeartbeatPublicationSet = Struct(
+ConfigHeartbeatPublicationSet = CapNProtoStruct(
     "destination" / UnicastUnassignedGroupAddress,
     "count" / LogAdapter(Int8ul, max_value=0x10, infinity=True),
     "period" / LogAdapter(Int8ul, max_value=0x10),
@@ -993,20 +1000,20 @@ ConfigHeartbeatPublicationSet = Struct(
     *NetKeyIndex,
 )
 
-ConfigHeartbeatPublicationStatus = Struct(
+ConfigHeartbeatPublicationStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigHeartbeatPublicationSet),
 )
 
-ConfigHeartbeatSubscriptionGet = Struct()
+ConfigHeartbeatSubscriptionGet = CapNProtoStruct()
 
-ConfigHeartbeatSubscriptionSet = Struct(
+ConfigHeartbeatSubscriptionSet = CapNProtoStruct(
     "source" / UnicastUnassignedAddress,
     "destination" / UnicastUnassignedGroupAddress,
     "period_log" / LogAdapter(Int8ul, max_value=0x11),
 )
 
-ConfigHeartbeatSubscriptionStatus = Struct(
+ConfigHeartbeatSubscriptionStatus = CapNProtoStruct(
     "status" / StatusCodeAdapter,
     Embedded(ConfigHeartbeatSubscriptionSet),
     "count" / LogAdapter(Int8ul, max_value=0x11, infinity=True),
@@ -1014,16 +1021,16 @@ ConfigHeartbeatSubscriptionStatus = Struct(
     "max_hops" / RangeValidator(Int8ul, max_value=0x7F),
 )
 
-ConfigLowPowerNodePollTimeoutGet = Struct(
+ConfigLowPowerNodePollTimeoutGet = CapNProtoStruct(
     "lpn_address" / Int16ul,  # TODO
 )
 
-ConfigLowPowerNodePollTimeoutStatus = Struct(
+ConfigLowPowerNodePollTimeoutStatus = CapNProtoStruct(
     Embedded(ConfigLowPowerNodePollTimeoutGet),
-    "poll_timeout" / Int24ul,  # TODO
+    "poll_timeout" / Int24ul,  # TODOEmbeddedBitStruct
 )
 
-ConfigNetworkTransmitGet = Struct()
+ConfigNetworkTransmitGet = CapNProtoStruct()
 
 ConfigNetworkTransmitSet = NetworkRetransmit
 
@@ -1105,84 +1112,86 @@ class ConfigOpcode(enum.IntEnum):
     CONFIG_VENDOR_MODEL_SUBSCRIPTION_LIST = 0x802C
 
 
+ConfigMessagesDict = {
+    ConfigOpcode.CONFIG_APPKEY_ADD: ConfigAppKeyAdd,
+    ConfigOpcode.CONFIG_APPKEY_DELETE: ConfigAppKeyDelete,
+    ConfigOpcode.CONFIG_APPKEY_GET: ConfigAppKeyGet,
+    ConfigOpcode.CONFIG_APPKEY_LIST: ConfigAppKeyList,
+    ConfigOpcode.CONFIG_APPKEY_STATUS: ConfigAppKeyStatus,
+    ConfigOpcode.CONFIG_APPKEY_UPDATE: ConfigAppKeyUpdate,
+    ConfigOpcode.CONFIG_BEACON_GET: ConfigBeaconGet,
+    ConfigOpcode.CONFIG_BEACON_SET: ConfigBeaconSet,
+    ConfigOpcode.CONFIG_BEACON_STATUS: ConfigBeaconStatus,
+    ConfigOpcode.CONFIG_COMPOSITION_DATA_GET: ConfigCompositionDataGet,
+    ConfigOpcode.CONFIG_COMPOSITION_DATA_STATUS: ConfigCompositionDataStatus,
+    ConfigOpcode.CONFIG_DEFAULT_TTL_GET: ConfigDefaultTTLGet,
+    ConfigOpcode.CONFIG_DEFAULT_TTL_SET: ConfigDefaultTTLSet,
+    ConfigOpcode.CONFIG_DEFAULT_TTL_STATUS: ConfigDefaultTTLStatus,
+    ConfigOpcode.CONFIG_FRIEND_GET: ConfigFriendGet,
+    ConfigOpcode.CONFIG_FRIEND_SET: ConfigFriendSet,
+    ConfigOpcode.CONFIG_FRIEND_STATUS: ConfigFriendStatus,
+    ConfigOpcode.CONFIG_GATT_PROXY_GET: ConfigGATTProxyGet,
+    ConfigOpcode.CONFIG_GATT_PROXY_SET: ConfigGATTProxySet,
+    ConfigOpcode.CONFIG_GATT_PROXY_STATUS: ConfigGATTProxyStatus,
+    ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_GET: ConfigHeartbeatPublicationGet,
+    ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_SET: ConfigHeartbeatPublicationSet,
+    ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_STATUS: ConfigHeartbeatPublicationStatus,
+    ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_GET: ConfigHeartbeatSubscriptionGet,
+    ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_SET: ConfigHeartbeatSubscriptionSet,
+    ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_STATUS: ConfigHeartbeatSubscriptionStatus,
+    ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_GET: ConfigKeyRefreshPhaseGet,
+    ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_SET: ConfigKeyRefreshPhaseSet,
+    ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_STATUS: ConfigKeyRefreshPhaseStatus,
+    ConfigOpcode.CONFIG_LOW_POWER_NODE_POLLTIMEOUT_GET: ConfigLowPowerNodePollTimeoutGet,
+    ConfigOpcode.CONFIG_LOW_POWER_NODE_POLLTIMEOUT_STATUS: ConfigLowPowerNodePollTimeoutStatus,
+    ConfigOpcode.CONFIG_MODEL_APP_BIND: ConfigModelAppBind,
+    ConfigOpcode.CONFIG_MODEL_APP_STATUS: ConfigModelAppStatus,
+    ConfigOpcode.CONFIG_MODEL_APP_UNBIND: ConfigModelAppUnbind,
+    ConfigOpcode.CONFIG_MODEL_PUBLICATION_GET: ConfigModelPublicationGet,
+    ConfigOpcode.CONFIG_MODEL_PUBLICATION_SET: ConfigModelPublicationSet,
+    ConfigOpcode.CONFIG_MODEL_PUBLICATION_STATUS: ConfigModelPublicationStatus,
+    ConfigOpcode.CONFIG_MODEL_PUBLICATION_VIRTUAL_ADDRESS_SET: ConfigModelPublicationVASet,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_ADD: ConfigModelSubscriptionAdd,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_DELETE: ConfigModelSubscriptionDelete,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_DELETE_ALL: ConfigModelSubscriptionDeleteAll,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_OVERWRITE: ConfigModelSubscriptionOverwrite,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_STATUS: ConfigModelSubscriptionStatus,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_VIRTUAL_ADDRESS_ADD: ConfigModelSubscriptionVAAdd,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_VIRTUAL_ADDRESS_DELETE: ConfigModelSubscriptionVADelete,
+    ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_VIRTUAL_ADDRESS_OVERWRITE: ConfigModelSubscriptionVAOverwrite,
+    ConfigOpcode.CONFIG_NETKEY_ADD: ConfigNetKeyAdd,
+    ConfigOpcode.CONFIG_NETKEY_DELETE: ConfigNetKeyDelete,
+    ConfigOpcode.CONFIG_NETKEY_GET: ConfigNetKeyGet,
+    ConfigOpcode.CONFIG_NETKEY_LIST: ConfigNetKeyList,
+    ConfigOpcode.CONFIG_NETKEY_STATUS: ConfigNetKeyStatus,
+    ConfigOpcode.CONFIG_NETKEY_UPDATE: ConfigNetKeyUpdate,
+    ConfigOpcode.CONFIG_NETWORK_TRANSMIT_GET: ConfigNetworkTransmitGet,
+    ConfigOpcode.CONFIG_NETWORK_TRANSMIT_SET: ConfigNetworkTransmitSet,
+    ConfigOpcode.CONFIG_NETWORK_TRANSMIT_STATUS: ConfigNetworkTransmitStatus,
+    ConfigOpcode.CONFIG_NODE_IDENTITY_GET: ConfigNodeIdentityGet,
+    ConfigOpcode.CONFIG_NODE_IDENTITY_SET: ConfigNodeIdentitySet,
+    ConfigOpcode.CONFIG_NODE_IDENTITY_STATUS: ConfigNodeIdentityStatus,
+    ConfigOpcode.CONFIG_NODE_RESET: ConfigNodeReset,
+    ConfigOpcode.CONFIG_NODE_RESET_STATUS: ConfigNodeResetStatus,
+    ConfigOpcode.CONFIG_RELAY_GET: ConfigRelayGet,
+    ConfigOpcode.CONFIG_RELAY_SET: ConfigRelaySet,
+    ConfigOpcode.CONFIG_RELAY_STATUS: ConfigRelayStatus,
+    ConfigOpcode.CONFIG_SIG_MODEL_APP_GET: ConfigSIGModelAppGet,
+    ConfigOpcode.CONFIG_SIG_MODEL_APP_LIST: ConfigSIGModelAppList,
+    ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_GET: ConfigSIGModelSubscriptionGet,
+    ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_LIST: ConfigSIGModelSubscriptionList,
+    ConfigOpcode.CONFIG_VENDOR_MODEL_APP_GET: ConfigVendorModelAppGet,
+    ConfigOpcode.CONFIG_VENDOR_MODEL_APP_LIST: ConfigVendorModelAppList,
+    ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_GET: ConfigVendorModelSubscriptionGet,
+    ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_LIST: ConfigVendorModelSubscriptionList,
+}
+
 # fmt: off
-ConfigMessage = Struct(
+ConfigMessage = CapNProtoStruct(
     "opcode" / Opcode(ConfigOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            ConfigOpcode.CONFIG_APPKEY_ADD: ConfigAppKeyAdd,
-            ConfigOpcode.CONFIG_APPKEY_DELETE: ConfigAppKeyDelete,
-            ConfigOpcode.CONFIG_APPKEY_GET: ConfigAppKeyGet,
-            ConfigOpcode.CONFIG_APPKEY_LIST: ConfigAppKeyList,
-            ConfigOpcode.CONFIG_APPKEY_STATUS: ConfigAppKeyStatus,
-            ConfigOpcode.CONFIG_APPKEY_UPDATE: ConfigAppKeyUpdate,
-            ConfigOpcode.CONFIG_BEACON_GET: ConfigBeaconGet,
-            ConfigOpcode.CONFIG_BEACON_SET: ConfigBeaconSet,
-            ConfigOpcode.CONFIG_BEACON_STATUS: ConfigBeaconStatus,
-            ConfigOpcode.CONFIG_COMPOSITION_DATA_GET: ConfigCompositionDataGet,
-            ConfigOpcode.CONFIG_COMPOSITION_DATA_STATUS: ConfigCompositionDataStatus,
-            ConfigOpcode.CONFIG_DEFAULT_TTL_GET: ConfigDefaultTTLGet,
-            ConfigOpcode.CONFIG_DEFAULT_TTL_SET: ConfigDefaultTTLSet,
-            ConfigOpcode.CONFIG_DEFAULT_TTL_STATUS: ConfigDefaultTTLStatus,
-            ConfigOpcode.CONFIG_FRIEND_GET: ConfigFriendGet,
-            ConfigOpcode.CONFIG_FRIEND_SET: ConfigFriendSet,
-            ConfigOpcode.CONFIG_FRIEND_STATUS: ConfigFriendStatus,
-            ConfigOpcode.CONFIG_GATT_PROXY_GET: ConfigGATTProxyGet,
-            ConfigOpcode.CONFIG_GATT_PROXY_SET: ConfigGATTProxySet,
-            ConfigOpcode.CONFIG_GATT_PROXY_STATUS: ConfigGATTProxyStatus,
-            ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_GET: ConfigHeartbeatPublicationGet,
-            ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_SET: ConfigHeartbeatPublicationSet,
-            ConfigOpcode.CONFIG_HEARBEAT_PUBLICATION_STATUS: ConfigHeartbeatPublicationStatus,
-            ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_GET: ConfigHeartbeatSubscriptionGet,
-            ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_SET: ConfigHeartbeatSubscriptionSet,
-            ConfigOpcode.CONFIG_HEARBEAT_SUBSCRIPTION_STATUS: ConfigHeartbeatSubscriptionStatus,
-            ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_GET: ConfigKeyRefreshPhaseGet,
-            ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_SET: ConfigKeyRefreshPhaseSet,
-            ConfigOpcode.CONFIG_KEY_REFRESH_PHASE_STATUS: ConfigKeyRefreshPhaseStatus,
-            ConfigOpcode.CONFIG_LOW_POWER_NODE_POLLTIMEOUT_GET: ConfigLowPowerNodePollTimeoutGet,
-            ConfigOpcode.CONFIG_LOW_POWER_NODE_POLLTIMEOUT_STATUS: ConfigLowPowerNodePollTimeoutStatus,
-            ConfigOpcode.CONFIG_MODEL_APP_BIND: ConfigModelAppBind,
-            ConfigOpcode.CONFIG_MODEL_APP_STATUS: ConfigModelAppStatus,
-            ConfigOpcode.CONFIG_MODEL_APP_UNBIND: ConfigModelAppUnbind,
-            ConfigOpcode.CONFIG_MODEL_PUBLICATION_GET: ConfigModelPublicationGet,
-            ConfigOpcode.CONFIG_MODEL_PUBLICATION_SET: ConfigModelPublicationSet,
-            ConfigOpcode.CONFIG_MODEL_PUBLICATION_STATUS: ConfigModelPublicationStatus,
-            ConfigOpcode.CONFIG_MODEL_PUBLICATION_VIRTUAL_ADDRESS_SET: ConfigModelPublicationVASet,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_ADD: ConfigModelSubscriptionAdd,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_DELETE: ConfigModelSubscriptionDelete,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_DELETE_ALL: ConfigModelSubscriptionDeleteAll,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_OVERWRITE: ConfigModelSubscriptionOverwrite,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_STATUS: ConfigModelSubscriptionStatus,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_VIRTUAL_ADDRESS_ADD: ConfigModelSubscriptionVAAdd,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_VIRTUAL_ADDRESS_DELETE: ConfigModelSubscriptionVADelete,
-            ConfigOpcode.CONFIG_MODEL_SUBSCRIPTION_VIRTUAL_ADDRESS_OVERWRITE: ConfigModelSubscriptionVAOverwrite,
-            ConfigOpcode.CONFIG_NETKEY_ADD: ConfigNetKeyAdd,
-            ConfigOpcode.CONFIG_NETKEY_DELETE: ConfigNetKeyDelete,
-            ConfigOpcode.CONFIG_NETKEY_GET: ConfigNetKeyGet,
-            ConfigOpcode.CONFIG_NETKEY_LIST: ConfigNetKeyList,
-            ConfigOpcode.CONFIG_NETKEY_STATUS: ConfigNetKeyStatus,
-            ConfigOpcode.CONFIG_NETKEY_UPDATE: ConfigNetKeyUpdate,
-            ConfigOpcode.CONFIG_NETWORK_TRANSMIT_GET: ConfigNetworkTransmitGet,
-            ConfigOpcode.CONFIG_NETWORK_TRANSMIT_SET: ConfigNetworkTransmitSet,
-            ConfigOpcode.CONFIG_NETWORK_TRANSMIT_STATUS: ConfigNetworkTransmitStatus,
-            ConfigOpcode.CONFIG_NODE_IDENTITY_GET: ConfigNodeIdentityGet,
-            ConfigOpcode.CONFIG_NODE_IDENTITY_SET: ConfigNodeIdentitySet,
-            ConfigOpcode.CONFIG_NODE_IDENTITY_STATUS: ConfigNodeIdentityStatus,
-            ConfigOpcode.CONFIG_NODE_RESET: ConfigNodeReset,
-            ConfigOpcode.CONFIG_NODE_RESET_STATUS: ConfigNodeResetStatus,
-            ConfigOpcode.CONFIG_RELAY_GET: ConfigRelayGet,
-            ConfigOpcode.CONFIG_RELAY_SET: ConfigRelaySet,
-            ConfigOpcode.CONFIG_RELAY_STATUS: ConfigRelayStatus,
-            ConfigOpcode.CONFIG_SIG_MODEL_APP_GET: ConfigSIGModelAppGet,
-            ConfigOpcode.CONFIG_SIG_MODEL_APP_LIST: ConfigSIGModelAppList,
-            ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_GET: ConfigSIGModelSubscriptionGet,
-            ConfigOpcode.CONFIG_SIG_MODEL_SUBSCRIPTION_LIST: ConfigSIGModelSubscriptionList,
-            ConfigOpcode.CONFIG_VENDOR_MODEL_APP_GET: ConfigVendorModelAppGet,
-            ConfigOpcode.CONFIG_VENDOR_MODEL_APP_LIST: ConfigVendorModelAppList,
-            ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_GET: ConfigVendorModelSubscriptionGet,
-            ConfigOpcode.CONFIG_VENDOR_MODEL_SUBSCRIPTION_LIST: ConfigVendorModelSubscriptionList,
-        }
+        ConfigMessagesDict,
     )
 )
 # fmt: on

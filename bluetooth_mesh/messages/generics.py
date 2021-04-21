@@ -23,8 +23,13 @@
 
 from construct import Adapter, BitsInteger, BitStruct, Int8ul, Struct
 
+from bluetooth_mesh.messages.capnproto import CapNProtoTypeAdapter
 
-class TransitionTimeAdapter(Adapter):
+
+class TransitionTimeAdapter(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "UInt32"
+
     RESOLUTION = {0b00: 0.1, 0b01: 1, 0b10: 10, 0b11: 10 * 60}
 
     def __init__(self, subcon, allow_unknown=False):
@@ -49,7 +54,10 @@ class TransitionTimeAdapter(Adapter):
         return dict(steps=int(steps), resolution=resolution)
 
 
-class Delay(Adapter):
+class Delay(CapNProtoTypeAdapter):
+
+    __capnproto_type__ = "UInt16"
+
     def _decode(self, obj, context, path):
         return obj / 200
 

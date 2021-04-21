@@ -23,6 +23,7 @@ from enum import IntEnum
 
 from construct import BitsInteger, BitStruct, Int8ul, Int24ul, Struct, Switch, this
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct
 from bluetooth_mesh.messages.util import DefaultCountValidator, EnumAdapter, Opcode
 
 
@@ -71,23 +72,25 @@ BatteryFlags = BitStruct(
                                            GenericBatteryFlagsPresence),
 )
 
-GenericBatteryGet = Struct()
+GenericBatteryGet = CapNProtoStruct()
 
-GenericBatteryStatus = Struct(
+GenericBatteryStatus = CapNProtoStruct(
     "battery_level" / DefaultCountValidator(Int8ul),
     "time_to_discharge" / DefaultCountValidator(Int24ul),
     "time_to_charge" / DefaultCountValidator(Int24ul),
     "flags" / BatteryFlags
 )
 
-GenericBatteryMessage = Struct(
+GenericBatteryDict = {
+    GenericBatteryOpcode.GENERIC_BATTERY_GET: GenericBatteryGet,
+    GenericBatteryOpcode.GENERIC_BATTERY_STATUS: GenericBatteryStatus,
+}
+
+GenericBatteryMessage = CapNProtoStruct(
     "opcode" / Opcode(GenericBatteryOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            GenericBatteryOpcode.GENERIC_BATTERY_GET: GenericBatteryGet,
-            GenericBatteryOpcode.GENERIC_BATTERY_STATUS: GenericBatteryStatus,
-        },
+        GenericBatteryDict,
     )
 )
 # fmt: on

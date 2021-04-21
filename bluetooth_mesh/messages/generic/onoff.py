@@ -23,6 +23,7 @@ from enum import IntEnum
 
 from construct import Int8ul, Select, Struct, Switch, this
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct
 from bluetooth_mesh.messages.generics import (
     Delay,
     TransitionTime,
@@ -39,11 +40,11 @@ class GenericOnOffOpcode(IntEnum):
 
 
 # fmt: on
-GenericOnOffGet = Struct()
+GenericOnOffGet = CapNProtoStruct()
 
-GenericOnOffSetMinimal = Struct("onoff" / Int8ul, "tid" / Int8ul)
+GenericOnOffSetMinimal = CapNProtoStruct("onoff" / Int8ul, "tid" / Int8ul)
 
-GenericOnOffSetOptional = Struct(
+GenericOnOffSetOptional = CapNProtoStruct(
     "onoff" / Int8ul,
     "tid" / Int8ul,
     "transition_time" / TransitionTimeAdapter(TransitionTime, allow_unknown=False),
@@ -54,9 +55,9 @@ GenericOnOffSet = Select(
     optional=GenericOnOffSetOptional, minimal=GenericOnOffSetMinimal
 )
 
-GenericOnOffStatusMinimal = Struct("present_onoff" / Int8ul)
+GenericOnOffStatusMinimal = CapNProtoStruct("present_onoff" / Int8ul)
 
-GenericOnOffStatusOptional = Struct(
+GenericOnOffStatusOptional = CapNProtoStruct(
     "present_onoff" / Int8ul,
     "target_onoff" / Int8ul,
     "remaining_time" / TransitionTimeAdapter(TransitionTime, allow_unknown=True),
@@ -66,17 +67,15 @@ GenericOnOffStatus = Select(
     optional=GenericOnOffStatusOptional, minimal=GenericOnOffStatusMinimal
 )
 
+GenericOnOffDict = {
+    GenericOnOffOpcode.GENERIC_ONOFF_GET: GenericOnOffGet,
+    GenericOnOffOpcode.GENERIC_ONOFF_SET: GenericOnOffSet,
+    GenericOnOffOpcode.GENERIC_ONOFF_SET_UNACKNOWLEDGED: GenericOnOffSet,
+    GenericOnOffOpcode.GENERIC_ONOFF_STATUS: GenericOnOffStatus,
+}
+
 GenericOnOffMessage = Struct(
     "opcode" / Opcode(GenericOnOffOpcode),
-    "params"
-    / Switch(
-        this.opcode,
-        {
-            GenericOnOffOpcode.GENERIC_ONOFF_GET: GenericOnOffGet,
-            GenericOnOffOpcode.GENERIC_ONOFF_SET: GenericOnOffSet,
-            GenericOnOffOpcode.GENERIC_ONOFF_SET_UNACKNOWLEDGED: GenericOnOffSet,
-            GenericOnOffOpcode.GENERIC_ONOFF_STATUS: GenericOnOffStatus,
-        },
-    ),
+    "params" / Switch(this.opcode, GenericOnOffDict,),
 )
 # fmt: off

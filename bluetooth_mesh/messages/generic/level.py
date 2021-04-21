@@ -23,6 +23,7 @@ from enum import IntEnum
 
 from construct import Embedded, Int8ul, Int16sl, Int32sl, Select, Struct, Switch, this
 
+from bluetooth_mesh.messages.capnproto import CapNProtoStruct
 from bluetooth_mesh.messages.generics import (
     OptionalSetParameters,
     TransitionTime,
@@ -43,14 +44,14 @@ class GenericLevelOpcode(IntEnum):
 
 
 # fmt: off
-GenericLevelGet = Struct()
+GenericLevelGet = CapNProtoStruct()
 
-GenericLevelSetMinimal = Struct(
+GenericLevelSetMinimal = CapNProtoStruct(
     "level" / Int16sl,
     "tid" / Int8ul
 )
 
-GenericLevelSetOptional = Struct(
+GenericLevelSetOptional = CapNProtoStruct(
     Embedded(GenericLevelSetMinimal),
     Embedded(OptionalSetParameters)
 )
@@ -60,12 +61,12 @@ GenericLevelSet = Select(
     minimal=GenericLevelSetMinimal
 )
 
-GenericDeltaSetMinimal = Struct(
+GenericDeltaSetMinimal = CapNProtoStruct(
     "delta_level" / Int32sl,
     "tid" / Int8ul
 )
 
-GenericDeltaSetOptional = Struct(
+GenericDeltaSetOptional = CapNProtoStruct(
     Embedded(GenericDeltaSetMinimal),
     Embedded(OptionalSetParameters)
 )
@@ -75,12 +76,12 @@ GenericDeltaSet = Select(
     minimal=GenericDeltaSetMinimal
 )
 
-GenericMoveSetMinimal = Struct(
+GenericMoveSetMinimal = CapNProtoStruct(
     "delta_level" / Int16sl,
     "tid" / Int8ul
 )
 
-GenericMoveSetOptional = Struct(
+GenericMoveSetOptional = CapNProtoStruct(
     Embedded(GenericMoveSetMinimal),
     Embedded(OptionalSetParameters)
 )
@@ -90,11 +91,11 @@ GenericMoveSet = Select(
     minimal=GenericMoveSetMinimal
 )
 
-GenericLevelStatusMinimal = Struct(
+GenericLevelStatusMinimal = CapNProtoStruct(
     "present_level" / Int16sl
 )
 
-GenericLevelStatusOptional = Struct(
+GenericLevelStatusOptional = CapNProtoStruct(
     Embedded(GenericLevelStatusMinimal),
     "target_level" / Int16sl,
     "remaining_time" / TransitionTimeAdapter(TransitionTime, allow_unknown=True)
@@ -105,20 +106,22 @@ GenericLevelStatus = Select(
     minimal=GenericLevelStatusMinimal
 )
 
+GenericLevelDict = {
+    GenericLevelOpcode.GENERIC_LEVEL_GET: GenericLevelGet,
+    GenericLevelOpcode.GENERIC_LEVEL_SET: GenericLevelSet,
+    GenericLevelOpcode.GENERIC_LEVEL_SET_UNACKNOWLEDGED: GenericLevelSet,
+    GenericLevelOpcode.GENERIC_LEVEL_STATUS: GenericLevelStatus,
+    GenericLevelOpcode.GENERIC_DELTA_SET: GenericDeltaSet,
+    GenericLevelOpcode.GENERIC_DELTA_SET_UNACKNOWLEDGED: GenericDeltaSet,
+    GenericLevelOpcode.GENERIC_MOVE_SET: GenericMoveSet,
+    GenericLevelOpcode.GENERIC_MOVE_SET_UNACKNOWLEDGED: GenericMoveSet,
+}
+
 GenericLevelMessage = Struct(
     "opcode" / Opcode(GenericLevelOpcode),
     "params" / Switch(
         this.opcode,
-        {
-            GenericLevelOpcode.GENERIC_LEVEL_GET: GenericLevelGet,
-            GenericLevelOpcode.GENERIC_LEVEL_SET: GenericLevelSet,
-            GenericLevelOpcode.GENERIC_LEVEL_SET_UNACKNOWLEDGED: GenericLevelSet,
-            GenericLevelOpcode.GENERIC_LEVEL_STATUS: GenericLevelStatus,
-            GenericLevelOpcode.GENERIC_DELTA_SET: GenericDeltaSet,
-            GenericLevelOpcode.GENERIC_DELTA_SET_UNACKNOWLEDGED: GenericDeltaSet,
-            GenericLevelOpcode.GENERIC_MOVE_SET: GenericMoveSet,
-            GenericLevelOpcode.GENERIC_MOVE_SET_UNACKNOWLEDGED: GenericMoveSet,
-        },
+        GenericLevelDict,
     )
 )
 # fmt: on
